@@ -229,8 +229,7 @@ Function ConvertFrom-SRXScreenLogs {
 	$Logs = $Logs -join "" -split "\n"
 
 	foreach ($line in $Logs) {
-		$line = $line -replace "  "," - "  -replace "-N0 ","" -replace "-N1 ","" -replace " RT_IDS: "," - " -replace " source: "," - " -replace ", destination: "," - " -replace ", zone name: "," - " -replace ", interface name: "," - " -replace ", action: "," - "
-		$line = $line -split " - "
+		$line = $line -replace "  "," - " -replace "-N0 "," " -replace "-N1 "," " -replace " RT_IDS: "," - " -replace " source: "," - " -replace ", destination: "," - " -replace ", zone name: "," - " -replace ", interface name: "," - " -replace ", action: "," - "  -replace ",","" -split " - "
 		
 		$DeviceName = $line[2]
 		$Timestamp = "$($Line[0]) $($Line[1]) " #$(get-date -format yyyy) $($Line[3])"  
