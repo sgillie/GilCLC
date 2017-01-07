@@ -229,28 +229,30 @@ Function ConvertFrom-SRXScreenLogs {
 	$Logs = $Logs -join "" -split "\n"
 
 	foreach ($line in $Logs) {
-		$line = $line -replace "  "," - " -replace "-N0 "," " -replace "-N1 "," " -replace " RT_IDS: "," - " -replace " source: "," - " -replace ", destination: "," - " -replace ", zone name: "," - " -replace ", interface name: "," - " -replace ", action: "," - "  -replace ",","" -split " - "
+		$line = $line -replace "  "," - " -replace "-N0 "," " -replace "-N1 "," " -replace " RT_IDS: "," - " -replace " source: "," - " -replace ", destination: "," - " -replace ", zone name: "," - " -replace ", interface name: "," - " -replace ", action: "," - "  -replace ",",""
+		$Time0,$Time1,$DeviceName,$IDS,$Source,$Destination,$Zone,$Interface,$Action = $line -split " - "
 		
-		$DeviceName = $line[2]
+		#$line = $line -replace "The last message repeats $N times",$Logs.incrementor[-1] #Pseudo-code to copy the previous line.
+		
 		$Timestamp = "$($Line[0]) $($Line[1]) " #$(get-date -format yyyy) $($Line[3])"  
 		#$Timestamp = get-date ($line[0] + " " + (get-date -format yyyy) + " " + $line[1]) #Still debugging this
-		$Source = $line[4] -split ":"
-		$Destination = $line[5] -split ":"
-		$Interface = $Line[7] -split "[.]"
+		$Source = $Source -split ":"
+		$Destination = $Destination -split ":"
+		$Interface = $Interface -split "[.]"
 		
 		$Output = New-Object -TypeName psobject
 		$Output = $Output | Select-Object Timestamp,Device,IDS,SourceIP,SourcePort,DestinationIP,DestinationPort,Zone,Interface,VLAN,Action
 		$Output.Timestamp = $Timestamp 
 		$Output.Device = $DeviceName
-		$Output.IDS = $line[3]
+		$Output.IDS = $IDS
 		$Output.SourceIP = $Source[0]
 		$Output.SourcePort = $Source[1]
 		$Output.DestinationIP = $Destination[0]
 		$Output.DestinationPort = $Destination[1]
-		$Output.Zone = $line[6]
+		$Output.Zone = $Zone
 		$Output.Interface = $Interface[0]
 		$Output.VLAN = $Interface[1]
-		$Output.Action = $line[8]
+		$Output.Action = $Action
 		
 		$Output #Returns the output, line-by-line.
 	}; #end foreach line
