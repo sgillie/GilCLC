@@ -226,7 +226,6 @@ Filter ConvertFrom-SRXScreenLogs {
 		[Parameter(Mandatory=$True)]$DeviceName
 	); #end Param
 	
-#	$LineOutput = New-Object -TypeName System.Collections.ArrayList
 	$Logs = $Logs -join "" -split "\n"
 
 	foreach ($line in $Logs) {
@@ -251,16 +250,16 @@ Filter ConvertFrom-SRXScreenLogs {
 		$Output.VLAN = $Interface[1]
 		$Output.Action = $line[8]
 		$Output
-
-		#Write-Host -f green "This is  line  $($line)"
-		#$LineOutput += $Output
 	}; #end foreach line
 <#
-#>
+	#$LineOutput = New-Object -TypeName System.Collections.ArrayList
+	#Write-Host -f green "This is  line  $($line)"
+	#$LineOutput += $Output
 
 	#$a,$b = $Logs - split " $Devicename "
 	#Write-Host "Timestamp - IDS - Source - Destination - Zone - Interface - Action"
 	#Return $Logs
+#>
 	
 }; #end Convert-SRXScreenLogs
 
