@@ -233,14 +233,14 @@ Filter ConvertFrom-SRXScreenLogs {
 		$line = $line -replace "  "," - " -replace "$Devicename"," - " -replace "-N0 ","" -replace "-N1 ","" -replace " RT_IDS: "," - " -replace " source: "," - " -replace ", destination: "," - " -replace ", zone name: "," - " -replace ", interface name: "," - " -replace ", action: "," - "
 		$line = $line -split " - "
 		
-		$Date = get-date ($line[0] + " " + (get-date -format yyyy) + " " + $line[1])
+		$Timestamp = "$($Line[0]) $($Line[1])"  #get-date ($line[0] + " " + (get-date -format yyyy) + " " + $line[1]) #Still debugging this
 		$Source = $line[4] -split ":"
 		$Destination = $line[5] -split ":"
 		$Interface = $Line[7] -split "[.]"
 		
 		$Output = New-Object -TypeName psobject
 		$Output = $Output | Select-Object Timestamp,IDS,SourceIP,SourcePort,DestinationIP,DestinationPort,Zone,Interface,VLAN,Action
-		$Output.Timestamp = "$($Line[0]) $($Line[1])"  #= get-date ($line[0] + " " + (get-date -format yyyy) + " " + $line[1])
+		$Output.Timestamp = $Timestamp 
 		$Output.IDS = $line[3]
 		$Output.SourceIP = $Source[0]
 		$Output.SourcePort = $Source[1]
