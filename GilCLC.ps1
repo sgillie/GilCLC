@@ -232,7 +232,8 @@ Filter ConvertFrom-SRXScreenLogs {
 		$line = $line -replace "  "," - " -replace "$Devicename"," - " -replace "-N0 ","" -replace "-N1 ","" -replace " RT_IDS: "," - " -replace " source: "," - " -replace ", destination: "," - " -replace ", zone name: "," - " -replace ", interface name: "," - " -replace ", action: "," - "
 		$line = $line -split " - "
 		
-		$Timestamp = "$($Line[0]) $($Line[1])"  #get-date ($line[0] + " " + (get-date -format yyyy) + " " + $line[1]) #Still debugging this
+		$Timestamp = "$($Line[0]) $($Line[1]) " #$(get-date -format yyyy) $($Line[3])"  
+		#$Timestamp = get-date ($line[0] + " " + (get-date -format yyyy) + " " + $line[1]) #Still debugging this
 		$Source = $line[4] -split ":"
 		$Destination = $line[5] -split ":"
 		$Interface = $Line[7] -split "[.]"
