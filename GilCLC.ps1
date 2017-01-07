@@ -252,7 +252,8 @@ Function ConvertFrom-SRXScreenLogs {
 		$Output.Interface = $Interface[0]
 		$Output.VLAN = $Interface[1]
 		$Output.Action = $line[8]
-		$Output
+		
+		$Output #Returns the output, line-by-line.
 	}; #end foreach line
 }; #end Convert-SRXScreenLogs
 
