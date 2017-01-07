@@ -223,7 +223,7 @@ Lifetime: 86400? / 86400?
 Filter ConvertFrom-SRXScreenLogs {
 	Param(
 		$Logs, # = (isrx "show log screen-log" $Devicename)
-		$Devicename
+		[Parameter(Mandatory=$True)]$DeviceName
 	); #end Param
 	
 #	$LineOutput = New-Object -TypeName System.Collections.ArrayList
