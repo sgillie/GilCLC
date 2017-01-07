@@ -223,15 +223,16 @@ Lifetime: 86400? / 86400?
 Function ConvertFrom-SRXScreenLogs {
 	Param(
 		$Logs, # = (isrx "show log screen-log" $Devicename)
-		[Parameter(Mandatory=$True)]$DeviceName
+		#[Parameter(Mandatory=$True)]$DeviceName
 	); #end Param
 	
 	$Logs = $Logs -join "" -split "\n"
 
 	foreach ($line in $Logs) {
-		$line = $line -replace "  "," - " -replace "$Devicename"," - " -replace "-N0 ","" -replace "-N1 ","" -replace " RT_IDS: "," - " -replace " source: "," - " -replace ", destination: "," - " -replace ", zone name: "," - " -replace ", interface name: "," - " -replace ", action: "," - "
+		$line = $line -replace "  "," - "  -replace "-N0 ","" -replace "-N1 ","" -replace " RT_IDS: "," - " -replace " source: "," - " -replace ", destination: "," - " -replace ", zone name: "," - " -replace ", interface name: "," - " -replace ", action: "," - "
 		$line = $line -split " - "
 		
+		$DeviceName = $line[2]
 		$Timestamp = "$($Line[0]) $($Line[1]) " #$(get-date -format yyyy) $($Line[3])"  
 		#$Timestamp = get-date ($line[0] + " " + (get-date -format yyyy) + " " + $line[1]) #Still debugging this
 		$Source = $line[4] -split ":"
@@ -239,8 +240,9 @@ Function ConvertFrom-SRXScreenLogs {
 		$Interface = $Line[7] -split "[.]"
 		
 		$Output = New-Object -TypeName psobject
-		$Output = $Output | Select-Object Timestamp,IDS,SourceIP,SourcePort,DestinationIP,DestinationPort,Zone,Interface,VLAN,Action
+		$Output = $Output | Select-Object Timestamp,Device,IDS,SourceIP,SourcePort,DestinationIP,DestinationPort,Zone,Interface,VLAN,Action
 		$Output.Timestamp = $Timestamp 
+		$Output.Device = $DeviceName
 		$Output.IDS = $line[3]
 		$Output.SourceIP = $Source[0]
 		$Output.SourcePort = $Source[1]
