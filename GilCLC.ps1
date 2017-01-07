@@ -220,7 +220,7 @@ Lifetime: 86400? / 86400?
 
 }; #end Get-VPNForm
 
-Filter ConvertFrom-SRXScreenLogs {
+Function ConvertFrom-SRXScreenLogs {
 	Param(
 		$Logs, # = (isrx "show log screen-log" $Devicename)
 		[Parameter(Mandatory=$True)]$DeviceName
