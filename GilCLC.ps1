@@ -266,6 +266,20 @@ Function ConvertFrom-SRXScreenLogs {
 	#Return $Logs
 #>
 	
+Function Get-SRXScreenLogStatistics {
+		Param(
+			[Parameter(Mandatory=$True)]$DeviceName,
+			[Int]$Depth = 5
+		); #end Param
+	$Logs = (isrx "show log screen-log" $Devicename)
+	$Logs = ConvertFrom-SRXScreenLogs $Logs
+	foreach ($NoteProperty in ($Logs | Get-Member -MemberType NoteProperty).name) {
+		$noteproperty
+		$Logs | group $NoteProperty -NoElement | sort count -Descending | select -First $Depth
+	}; #end foreach NoteProperty
+}; #end Get-SRXScreenLogStatistics
+
+
 
 Function Invoke-SRXScreenServer {
 		Param(
