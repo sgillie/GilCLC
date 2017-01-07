@@ -233,20 +233,24 @@ Filter ConvertFrom-SRXScreenLogs {
 		$line = $line -replace "  "," - " -replace "$Devicename"," - " -replace "-N0 ","" -replace "-N1 ","" -replace " RT_IDS: "," - " -replace " source: "," - " -replace ", destination: "," - " -replace ", zone name: "," - " -replace ", interface name: "," - " -replace ", action: "," - "
 		$line = $line -split " - "
 		
+		$Date = get-date ($line[0] + " " + (get-date -format yyyy) + " " + $line[1])
 		$Source = $line[4] -split ":"
 		$Destination = $line[5] -split ":"
+		$Interface = $Line[7] -split "[.]"
+		
 		$Output = New-Object -TypeName psobject
-		$Output = $Output | Select-Object Timestamp,IDS,SourceIP,SourcePort,DestinationIP,DestinationPort,Zone,Interface,Action
-		$Output.Timestamp #= get-date ($line[0] + " " + (get-date -format yyyy) + " " + $line[1])
+		$Output = $Output | Select-Object Timestamp,IDS,SourceIP,SourcePort,DestinationIP,DestinationPort,Zone,Interface,VLAN,Action
+		$Output.Timestamp = "$($Line[0]) $($Line[1])"  #= get-date ($line[0] + " " + (get-date -format yyyy) + " " + $line[1])
 		$Output.IDS = $line[3]
 		$Output.SourceIP = $Source[0]
 		$Output.SourcePort = $Source[1]
 		$Output.DestinationIP = $Destination[0]
 		$Output.DestinationPort = $Destination[1]
 		$Output.Zone = $line[6]
-		$Output.Interface = $line[7]
+		$Output.Interface = $Interface[0]
+		$Output.VLAN = $Interface[1]
 		$Output.Action = $line[8]
-	Return $Output
+		$Output
 
 		#Write-Host -f green "This is  line  $($line)"
 		#$LineOutput += $Output
