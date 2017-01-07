@@ -251,6 +251,8 @@ Filter ConvertFrom-SRXScreenLogs {
 		$Output.Action = $line[8]
 		$Output
 	}; #end foreach line
+}; #end Convert-SRXScreenLogs
+
 <#
 	#$LineOutput = New-Object -TypeName System.Collections.ArrayList
 	#Write-Host -f green "This is  line  $($line)"
@@ -261,7 +263,6 @@ Filter ConvertFrom-SRXScreenLogs {
 	#Return $Logs
 #>
 	
-}; #end Convert-SRXScreenLogs
 
 Function Invoke-SRXScreenServer {
 		Param(
