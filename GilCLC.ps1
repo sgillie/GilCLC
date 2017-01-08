@@ -276,8 +276,17 @@ Function Get-SRXScreenLogStatistics {
 	); #end Param
 	$Logs = ConvertFrom-SRXScreenLogs $Logs
 	foreach ($NoteProperty in ($Logs | Get-Member -MemberType NoteProperty).name) {
-		$noteproperty
-		$Logs | group $NoteProperty -NoElement | sort count -Descending | select -First $Depth
+		#Write-Host $NoteProperty
+		$NoteProperty
+		#Write-Host $Logs, grouped by NoteProperty
+		$LogsHarvest = $Logs | group $NoteProperty -NoElement | select Count,Name,PercentOfTotal | sort count -Descending | select -First $Depth
+		try{ 
+			for ($i = 0 ; $i -le $Logs.count ; $i++) {
+				$LogsHarvest[$i].percentoftotal = [math]::Round((($LogsHarvest[$i].count / $Logs.count)*100),2)
+			}; #end for i le Logs.count
+		} catch {
+		}; #end try
+		$LogsHarvest
 	}; #end foreach NoteProperty
 }; #end Get-SRXScreenLogStatistics
 
