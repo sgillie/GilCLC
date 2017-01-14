@@ -278,8 +278,11 @@ Function Get-SRXScreenLogStatistics {
 		[Int]$TopResults = 5,
 		[Int]$ScreenDepth = 250,
 		$Logs = (isrx "show log screen-log | last $ScreenDepth" $Devicename),
+		[switch]$NoConvert
 	); #end Param
-	$Logs = ConvertFrom-SRXScreenLogs $Logs
+	if (!($NoConvert)) {
+		$Logs = ConvertFrom-SRXScreenLogs $Logs
+	}; #end if NoConvert
 	foreach ($NoteProperty in ($Logs | Get-Member -MemberType NoteProperty).name) {
 		$LogsHarvest = $Logs | group $NoteProperty -NoElement | select Count,Name,PercentOfTotal | sort count -Descending | select -First $Depth
 		try{ 
