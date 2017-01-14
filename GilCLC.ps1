@@ -1,11 +1,11 @@
-# C:\Users\StephenGillie\Documents\WindowsPowerShell\GilCLC.ps1 Build: 109 2016-12-20T12:32:30 Copyright CLC Stephen Gillie 
+# C:\Workbox\repos\GilCLC\GilCLC.ps1 Build: 110 2017-01-14T12:55:21 Copyright CLC Stephen Gillie 
 # Update Path: 
 # Build : Update Notes
-# 103 : 50 : Function Get_SRXLogs _     Param_     $PublicIP,     $InternalIP,     $Datacenter    _; #end Param    _; #end Get_SRXLogs
 # 104 : 58 : if _$PublicIP_ _  Write_Host _f green "The variable  PublicIP is $_$PublicIP_" _; #end if PublicIP
 # 105 : 58 : if _$InternalIP_ _  Write_Host _f green "The variable  InternalIP is $_$InternalIP_" _; #end if InternalIP
 # 106 : 245 :isrx "request security ike debug_enable local $_$VPNData.local.address_ remote $_$VPNData.remote.address_ level 11" $DataCenter_srx_core 
 # 107 : 736 : 	"- Password pattern_ $Output_"
+# 110 : 732 : Function ConvertFrom_CharArrayToString _     Param_     [string]$String    _; #end Param  $string _join "" _split "`n"    _; #end ConvertFrom_CharArrayToString
 
 #$GilCLC = (Get-Module GilCLC).path
 $GilCLCVersion = ([int](gc $GilCLC)[0].split(" ")[3])
@@ -22,7 +22,6 @@ $ips = "@
 @"
 $ips = $ips -split "`n"
 
--join "" -split "`n"
 
 #Get path from registry
 (Get-ItemProperty -Path "Registry::HKLM\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH).path
@@ -226,7 +225,8 @@ Function ConvertFrom-SRXScreenLogs {
 		#[Parameter(Mandatory=$True)]$DeviceName
 	); #end Param
 	
-	$Logs = $Logs -join "" -split "\n"
+	#$Logs = $Logs -join "" -split "\n"
+	$Logs = ConvertFrom-CharArrayToString $Logs
 
 	foreach ($line in $Logs) {
 		$line = $line -replace "  "," - " -replace "-N0 "," " -replace "-N1 "," " -replace " RT_IDS: "," - " -replace " source: "," - " -replace ", destination: "," - " -replace ", zone name: "," - " -replace ", interface name: "," - " -replace ", action: "," - "  -replace ",",""
@@ -412,6 +412,7 @@ Function Get-SRXTunnelStatistics {
 	$OldTime = get-date
 	$TunnelStats = Invoke-JuniperCliCommand -Command "show security ipsec statistics index $Index node $Node" -Device $DataCenter-srx-core
 	#$TunnelStats = $TunnelStats  -join "" -split "\n"
+	$TunnelStats = ConvertFrom-CharArrayToString $TunnelStats 
 
 	$OldEncBytes = $stats | select-string "Encrypted bytes:"
 	$OldEncBytes = ($OldEncBytes -split "[:]\s+")[1]
@@ -720,15 +721,27 @@ function Get-PuttyLogin {
 Function Convert-ArrayToString {
 	#(Get-Clipboard) -replace "`n"," - " -replace ' -  - ',"`n" | clip
 	#(Get-Clipboard) -join "" -split "\n" -join " - " -replace ' -  - ',"`n" | clip
+	#(Get-Clipboard) ConvertFrom-CharArrayToString -join " - " -replace ' -  - ',"`n" | clip
+
 	(Get-Clipboard) -join " - " -replace ' -  - ',"`n" | clip
 	
 }; #end Convert-SpaceDeltoHypehnDel
 
 Function Convert-SpaceDeltoHypehnDel {
 	#(Get-Clipboard) -join "" -split "\n" -replace '\s+'," - " -replace '\t+'," - " | clip
+	#(Get-Clipboard) ConvertFrom-CharArrayToString -replace '\s+'," - " -replace '\t+'," - " | clip
 	(Get-Clipboard) -replace '\s+'," - " -replace '\t+'," - " | clip
 	
 }; #end Convert-SpaceDeltoHypehnDel
+
+
+Function ConvertFrom-CharArrayToString {
+	Param(
+		[string]$String
+	); #end Param
+	$string -join "" -split "`n"
+	
+}; #end ConvertFrom-CharArrayToString
 
 Function Get-PasswordCharacterType {
 	Param(
