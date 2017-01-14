@@ -230,7 +230,9 @@ Function ConvertFrom-SRXScreenLogs {
 
 	foreach ($line in $Logs) {
 		$line = $line -replace "  "," - " -replace "-N0 "," " -replace "-N1 "," " -replace " RT_IDS: "," - " -replace " source: "," - " -replace ", destination: "," - " -replace ", zone name: "," - " -replace ", interface name: "," - " -replace ", action: "," - "  -replace ",",""
-		$Time0,$Time1,$DeviceName,$IDS,$Source,$Destination,$Zone,$Interface,$Action = $line -split " - "
+		#This uses a little-known trick of "splatting" each line from the -split into these variables, in order. So the first line goes in $Time0, then the next in $Time1, then 3rd line in $DeviceName etc.
+		#$Time0,$Time1,$DeviceName,$IDS,$Source,$Destination,$Zone,$Interface,$Action = $line -split " - "
+		$Time0,$DeviceName,$IDS,$Source,$Destination,$Zone,$Interface,$Action = $line -split " - "
 		
 		#$line = $line -replace "The last message repeats $N times",$Logs.incrementor[-1] #Pseudo-code to copy the previous line.
 		
