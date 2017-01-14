@@ -262,16 +262,6 @@ Function ConvertFrom-SRXScreenLogs {
 	}; #end foreach line
 }; #end Convert-SRXScreenLogs
 
-<#
-	#$LineOutput = New-Object -TypeName System.Collections.ArrayList
-	#Write-Host -f green "This is  line  $($line)"
-	#$LineOutput += $Output
-
-	#$a,$b = $Logs - split " $Devicename "
-	#Write-Host "Timestamp - IDS - Source - Destination - Zone - Interface - Action"
-	#Return $Logs
-#>
-	
 Function Get-SRXScreenLogStatistics {
 	Param(
 		[Parameter(Mandatory=$True)]$DeviceName,
