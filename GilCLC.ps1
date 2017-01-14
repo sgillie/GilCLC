@@ -660,11 +660,13 @@ function Get-PuttyLogin {
 
 Function Convert-ArrayToString {
 	#(Get-Clipboard) -replace "`n"," - " -replace ' -  - ',"`n" | clip
+	#(Get-Clipboard) -join "" -split "\n" -join " - " -replace ' -  - ',"`n" | clip
 	(Get-Clipboard) -join " - " -replace ' -  - ',"`n" | clip
 	
 }; #end Convert-SpaceDeltoHypehnDel
 
 Function Convert-SpaceDeltoHypehnDel {
+	#(Get-Clipboard) -join "" -split "\n" -replace '\s+'," - " -replace '\t+'," - " | clip
 	(Get-Clipboard) -replace '\s+'," - " -replace '\t+'," - " | clip
 	
 }; #end Convert-SpaceDeltoHypehnDel
