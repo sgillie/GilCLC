@@ -407,45 +407,45 @@ Function Get-SRXTunnelStatistics {
 		[ValidateSet("AU1", "CA1", "CA2", "CA3", "DE1", "GB1", "GB3", "IL1", "NE1", "NY1", "SG1", "UC1", "UT1", "VA1", "VA2", "WA1")]
 		$DataCenter
 	); #end Param
-#$stats = isrx "show security ipsec statistics index 300" ca3-srx-core
+	#$stats = isrx "show security ipsec statistics index 300" ca3-srx-core
 
-$OldTime = get-date
-$TunnelStats = Invoke-JuniperCliCommand -Command "show security ipsec statistics index $Index node $Node" -Device $DataCenter-srx-core
-$TunnelStats = $TunnelStats  -join "" -split "\n"
+	$OldTime = get-date
+	$TunnelStats = Invoke-JuniperCliCommand -Command "show security ipsec statistics index $Index node $Node" -Device $DataCenter-srx-core
+	#$TunnelStats = $TunnelStats  -join "" -split "\n"
 
-$OldEncBytes = $stats | select-string "Encrypted bytes:"
-$OldEncBytes = ($OldEncBytes -split "[:]\s+")[1]
+	$OldEncBytes = $stats | select-string "Encrypted bytes:"
+	$OldEncBytes = ($OldEncBytes -split "[:]\s+")[1]
 
-$OldDecBytes = $stats | select-string "Decrypted bytes:"
-$OldDecBytes = ($OldDecBytes -split "[:]\s+")[1]
+	$OldDecBytes = $stats | select-string "Decrypted bytes:"
+	$OldDecBytes = ($OldDecBytes -split "[:]\s+")[1]
 
-$OldEncPackets = $stats | select-string "Encrypted packets:"
-$OldEncPackets = ($OldEncPackets -split "[:]\s+")[1]
+	$OldEncPackets = $stats | select-string "Encrypted packets:"
+	$OldEncPackets = ($OldEncPackets -split "[:]\s+")[1]
 
-$OldDecPackets = $stats | select-string "Decrypted packets:"
-$OldDecPackets = ($OldDecPackets -split "[:]\s+")[1]
+	$OldDecPackets = $stats | select-string "Decrypted packets:"
+	$OldDecPackets = ($OldDecPackets -split "[:]\s+")[1]
 
-$NewTime = get-date
-$TunnelStats = Invoke-JuniperCliCommand -Command "show security ipsec statistics index $Index node $Node" -Device $DataCenter-srx-core
-$TunnelStats = $TunnelStats  -join "" -split "\n"
+	$NewTime = get-date
+	$TunnelStats = Invoke-JuniperCliCommand -Command "show security ipsec statistics index $Index node $Node" -Device $DataCenter-srx-core
+	$TunnelStats = ConvertFrom-CharArrayToString $TunnelStats 
 
-$NewEncBytes = $stats | select-string "Encrypted bytes:"
-$NewEncBytes = ($NewEncBytes -split "[:]\s+")[1]
+	$NewEncBytes = $stats | select-string "Encrypted bytes:"
+	$NewEncBytes = ($NewEncBytes -split "[:]\s+")[1]
 
-$NewDecBytes = $stats | select-string "Decrypted bytes:"
-$NewDecBytes = ($NewDecBytes -split "[:]\s+")[1]
+	$NewDecBytes = $stats | select-string "Decrypted bytes:"
+	$NewDecBytes = ($NewDecBytes -split "[:]\s+")[1]
 
-$NewEncPackets = $stats | select-string "Encrypted packets:"
-$NewEncPackets = ($NewEncPackets -split "[:]\s+")[1]
+	$NewEncPackets = $stats | select-string "Encrypted packets:"
+	$NewEncPackets = ($NewEncPackets -split "[:]\s+")[1]
 
-$NewDecPackets = $stats | select-string "Decrypted packets:"
-$NewDecPackets = ($NewDecPackets -split "[:]\s+")[1]
+	$NewDecPackets = $stats | select-string "Decrypted packets:"
+	$NewDecPackets = ($NewDecPackets -split "[:]\s+")[1]
 
 
-$EncByteIncrease = $NewEncBytes - $OldEncBytes
-$DecByteIncrease = $NewDecBytes - $OldDecBytes
-$EncPacketIncrease = $NewEncPackets - $OldEncPackets
-$DecPacketIncrease = $NewDecPackets - $OldDecPackets
+	$EncByteIncrease = $NewEncBytes - $OldEncBytes
+	$DecByteIncrease = $NewDecBytes - $OldDecBytes
+	$EncPacketIncrease = $NewEncPackets - $OldEncPackets
+	$DecPacketIncrease = $NewDecPackets - $OldDecPackets
 
 "
 Total Seconds: $(($NewTime - $OldTime).TotalSeconds)
