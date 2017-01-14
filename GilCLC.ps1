@@ -236,8 +236,10 @@ Function ConvertFrom-SRXScreenLogs {
 		
 		#$line = $line -replace "The last message repeats $N times",$Logs.incrementor[-1] #Pseudo-code to copy the previous line.
 		
-		$Timestamp = "$($Line[0]) $($Line[1]) " #$(get-date -format yyyy) $($Line[3])"  
+		#$Timestamp = "$($Line[0]) $($Line[1])" #$(get-date -format yyyy) $($Line[3])"  
 		#$Timestamp = get-date ($line[0] + " " + (get-date -format yyyy) + " " + $line[1]) #Still debugging this
+		#$Timestamp = "$($Time0) $($Time1)"
+		$Timestamp = $Time0
 		$Source = $Source -split ":"
 		$Destination = $Destination -split ":"
 		$Interface = $Interface -split "[.]"
