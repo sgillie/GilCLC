@@ -280,9 +280,6 @@ Function Get-SRXScreenLogStatistics {
 	); #end Param
 	$Logs = ConvertFrom-SRXScreenLogs $Logs
 	foreach ($NoteProperty in ($Logs | Get-Member -MemberType NoteProperty).name) {
-		#Write-Host $NoteProperty
-		$NoteProperty
-		#Write-Host $Logs, grouped by NoteProperty
 		$LogsHarvest = $Logs | group $NoteProperty -NoElement | select Count,Name,PercentOfTotal | sort count -Descending | select -First $Depth
 		try{ 
 			for ($i = 0 ; $i -le $Logs.count ; $i++) {
@@ -290,11 +287,10 @@ Function Get-SRXScreenLogStatistics {
 			}; #end for i le Logs.count
 		} catch {
 		}; #end try
+		$NoteProperty
 		$LogsHarvest
 	}; #end foreach NoteProperty
 }; #end Get-SRXScreenLogStatistics
-
-
 
 Function Invoke-SRXScreenServer {
 		Param(
