@@ -1,4 +1,4 @@
-# C:\Users\StephenGillie\Documents\WindowsPowerShell\GilCLC.ps1 Build: 107 2016-12-20T12:32:30 Copyright CLC Stephen Gillie 
+# C:\Users\StephenGillie\Documents\WindowsPowerShell\GilCLC.ps1 Build: 109 2016-12-20T12:32:30 Copyright CLC Stephen Gillie 
 # Update Path: 
 # Build : Update Notes
 # 103 : 50 : Function Get_SRXLogs _     Param_     $PublicIP,     $InternalIP,     $Datacenter    _; #end Param    _; #end Get_SRXLogs
