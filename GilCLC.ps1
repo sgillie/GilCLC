@@ -358,17 +358,20 @@ Function Get-ControlVPNDetails {
 		"No logged items in Messages log."
 	}
 	
-	$JuniperVPNData = Test-JuniperS2SVPN -DataCenter $DataCenter -PeerPublicIp $($VPNData.remote.address) -PeerSubnet $($VPNData.remote.subnets[0]) -ClcSubnet $($VPNData.local.subnets[0]) 
-	#No Peer or CLC for Phase 1 only.
 	"VPN Configuration:"
+	$JuniperVPNData = try {
+	Test-JuniperS2SVPN -DataCenter $DataCenter -PeerPublicIp $($VPNData.remote.address) -PeerSubnet $($VPNData.remote.subnets[0]) -ClcSubnet $($VPNData.local.subnets[0]) 
+	} catch {
+		isrx "request security ike debug-enable local $($VPNData.local.address) remote $($VPNData.remote.address) level 11" $DataCenter-srx-core 
+		sleep 5
+		isrx "request security ike debug-disable" $DataCenter-srx-core 
+		$KMDdata = isrx "show log kmd | match $($VPNData.remote.address) " $DataCenter-srx-core 
+		"KMD logs:"
+		$KMDdata
+	}
+	#No Peer or CLC for Phase 1 only.
 	$JuniperVPNData
 	
-	isrx "request security ike debug-enable local $($VPNData.local.address) remote $($VPNData.remote.address) level 11" $DataCenter-srx-core 
-	sleep 5
-	isrx "request security ike debug-disable" $DataCenter-srx-core 
-	$KMDdata = isrx "show log kmd | match $($VPNData.remote.address) " $DataCenter-srx-core 
-	"KMD logs:"
-	$KMDdata
 
 	
 <#
