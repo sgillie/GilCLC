@@ -374,12 +374,7 @@ Function Get-ControlVPNDetails {
 	
 }; #end Get-ControlVPNDetails
 
-	
 <#
-
-#$TunnelStats = Invoke-JuniperCliCommand -Command "show security ipsec statistics index 160 node 0" -Device $DataCenter-srx-core
-
-
 Invoke-JuniperCliCommand -Command 'show log messages | match 206.128.101.148' -Device va2-srx-core
 Test-JuniperS2SVPN -DataCenter WA1 -PeerPublicIp 209.67.114.22 -PeerSubnet 172.16.1.48/32 -ClcSubnet 10.80.156.0/24 #No Peer or CLC for Phase 1 only.
 Get-InfrastructureDevice va2-cfw-1
@@ -396,6 +391,67 @@ Invoke-JuniperCliCommand -Command "show log kmd | last 25" -device "$Datacenter-
 Invoke-JuniperCliCommand -Command "request security ike debug-disable" -device "$Datacenter-srx-core"
 
 #>
+
+
+
+Function Get-SRXTunnelStatistics {
+	Param(
+		[Parameter(Mandatory=$True)]
+		[int]$index,
+		[int]$Node = 0,
+		[Parameter(Mandatory=$True)]
+		[ValidateSet("AU1", "CA1", "CA2", "CA3", "DE1", "GB1", "GB3", "IL1", "NE1", "NY1", "SG1", "UC1", "UT1", "VA1", "VA2", "WA1")]
+		$DataCenter
+	); #end Param
+#$stats = isrx "show security ipsec statistics index 300" ca3-srx-core
+
+$OldTime = get-date
+$TunnelStats = Invoke-JuniperCliCommand -Command "show security ipsec statistics index $Index node $Node" -Device $DataCenter-srx-core
+$TunnelStats = $TunnelStats  -join "" -split "\n"
+
+$OldEncBytes = $stats | select-string "Encrypted bytes:"
+$OldEncBytes = ($OldEncBytes -split "[:]\s+")[1]
+
+$OldDecBytes = $stats | select-string "Decrypted bytes:"
+$OldDecBytes = ($OldDecBytes -split "[:]\s+")[1]
+
+$OldEncPackets = $stats | select-string "Encrypted packets:"
+$OldEncPackets = ($OldEncPackets -split "[:]\s+")[1]
+
+$OldDecPackets = $stats | select-string "Decrypted packets:"
+$OldDecPackets = ($OldDecPackets -split "[:]\s+")[1]
+
+$NewTime = get-date
+$TunnelStats = Invoke-JuniperCliCommand -Command "show security ipsec statistics index $Index node $Node" -Device $DataCenter-srx-core
+$TunnelStats = $TunnelStats  -join "" -split "\n"
+
+$NewEncBytes = $stats | select-string "Encrypted bytes:"
+$NewEncBytes = ($NewEncBytes -split "[:]\s+")[1]
+
+$NewDecBytes = $stats | select-string "Decrypted bytes:"
+$NewDecBytes = ($NewDecBytes -split "[:]\s+")[1]
+
+$NewEncPackets = $stats | select-string "Encrypted packets:"
+$NewEncPackets = ($NewEncPackets -split "[:]\s+")[1]
+
+$NewDecPackets = $stats | select-string "Decrypted packets:"
+$NewDecPackets = ($NewDecPackets -split "[:]\s+")[1]
+
+
+$EncByteIncrease = $NewEncBytes - $OldEncBytes
+$DecByteIncrease = $NewDecBytes - $OldDecBytes
+$EncPacketIncrease = $NewEncPackets - $OldEncPackets
+$DecPacketIncrease = $NewDecPackets - $OldDecPackets
+
+"
+Total Seconds: $(($NewTime - $OldTime).TotalSeconds)
+Encrypted Packets have increased by: $EncPacketIncrease
+Decrypted Packets have increased by: $DecPacketIncrease
+Encrypted Bytes have increased by: $EncByteIncrease
+Decrypted Bytes have increased by: $EncPacketIncrease
+"
+
+}; #end Get-SRXTunnelStatistics
 	
 
 #endregion
@@ -422,10 +478,6 @@ Invoke-JuniperCliCommand -Command "request security ike debug-disable" -device "
 #6. Update ticket with these.
 #comment
 
-$stats = isrx "show security ipsec statistics index 300" ca3-srx-core
-$stats2 = ($stats -join "" -split "\n")
-$EncryptedBytes = ($stats2 -split "bytes:")[5]
-$DecryptedBytes = ($stats2 -split "bytes:")[7]
 
 #>
 
