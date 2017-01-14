@@ -372,6 +372,7 @@ Function Get-ControlVPNDetails {
 	#No Peer or CLC for Phase 1 only.
 	$JuniperVPNData
 	
+}; #end Get-ControlVPNDetails
 
 	
 <#
@@ -396,7 +397,6 @@ Invoke-JuniperCliCommand -Command "request security ike debug-disable" -device "
 
 #>
 	
-}; #end Get-ControlVPNDetails
 
 #endregion
 
