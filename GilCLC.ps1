@@ -724,6 +724,14 @@ Function Convert-SpaceDeltoHypehnDel {
 	
 }; #end Convert-SpaceDeltoHypehnDel
 
+Function ConvertFrom-ParagraphtoBulletList {
+	(Get-Clipboard) -replace  "[.] ",".`n- " | clip
+	(Get-Clipboard) -replace  "[?] ","?`n- " | clip
+	(Get-Clipboard) -replace  "[!] ","!`n- " | clip
+	(Get-Clipboard) -replace  "[:] ",":`n- " | clip
+	(Get-Clipboard) -replace  "[;] ",";`n- " | clip
+	
+}; #end Convert-SpaceDeltoHypehnDel
 
 Function ConvertFrom-CharArrayToString {
 	Param(
