@@ -392,7 +392,7 @@ Function Get-SRXTunnelStatistics {
 	Param(
 		[Parameter(Mandatory=$True)]
 		[int]$index,
-		[int]$Node = 0,
+		[int]$Node = "primary",
 		[Parameter(Mandatory=$True)]
 		[ValidateSet("AU1", "CA1", "CA2", "CA3", "DE1", "GB1", "GB3", "IL1", "NE1", "NY1", "SG1", "UC1", "UT1", "VA1", "VA2", "WA1")]
 		$DataCenter
