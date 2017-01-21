@@ -912,6 +912,102 @@ function Convert-CPUReady {
  
 <#
 #>
+#region ElasticSearch
+$baseUrl = 'http://10.170.15.15:9200/devices/device/_search'
+
+function Get-AllDevices {
+    $query = '
+    {
+        "query":{
+        "match_all": {}
+        }, "size": 700
+    }'
+    
+    $response = Invoke-RestMethod $baseUrl -Method Post -Body $query -ContentType 'application/json'
+    if($response.hits.total -gt 0) {
+        return $response.hits.hits | select -Property _source
+    }
+    return $null
+}
+
+function Get-AllDevicesFromDC {
+[Cmdletbinding()]
+    param (
+        [Parameter(Mandatory=$true)][string]$DCName
+    )
+
+    $query = '
+    {
+        "query": {
+            "term": {
+                "datacenter": "' + $DCName + '"
+            }
+        },
+        "size": 500
+    }'
+    
+    $response = Invoke-RestMethod $baseUrl -Method Post -Body $query -ContentType 'application/json'
+    if($response.hits.total -gt 0) {
+        return $response.hits.hits | select -Property _source
+    }
+    return $null
+}
+
+function Get-AllDevicesFromProperty {
+[Cmdletbinding()]
+    param (
+        [Parameter(Mandatory=$true)][string]$Property,
+        [Parameter(Mandatory=$true)][string]$Value
+    )
+
+    $query = '
+    {
+        "query": {
+            "term": {
+                "' + $Property + '": "' + $Value + '"
+            }
+        },
+        "size": 500
+    }'
+    
+    $response = Invoke-RestMethod $baseUrl -Method Post -Body $query -ContentType 'application/json'
+    if($response.hits.total -gt 0) {
+        return $response.hits.hits | select -Property _source
+    }
+    return $null
+}
+
+function Get-DevicesViaWildCard {
+[Cmdletbinding()]
+    param (
+        [Parameter(Mandatory=$true)][string]$Property,
+        [Parameter(Mandatory=$true)][string]$Value
+    )
+
+    $query = '
+    {
+        "query": {
+            "wildcard": {
+                "' + $Property + '": "' + $Value + '"
+            }
+        },
+        "size": 200
+    }'
+    
+    $response = Invoke-RestMethod $baseUrl -Method Post -Body $query -ContentType 'application/json'
+    if($response.hits.total -gt 0) {
+        return $response.hits.hits | select -Property _source
+    }
+    return $null
+}
+
+#Get-AllDevices
+#Get-AllDevicesFromDC -DCName "wa1"
+#Get-AllDevicesFromProperty -Property "type" -Value "netoob"
+#Get-DevicesViaWildCard -Property "type" -Value "net*"
+
+#endregion
+
  
 
 
