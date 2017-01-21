@@ -308,8 +308,8 @@ $l = $m.split(' /')[-2]
 	
 Function Get-ControlVPNDetails {
 	Param(
-		$AccountAlias,
 		$DataCenter,
+		$AccountAlias,
 		$Sitename,
 		[switch]$NoTicketOutput
 	); #end Param
