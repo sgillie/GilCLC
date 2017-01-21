@@ -58,6 +58,11 @@ Function Get-SRXLogs {
 		$InternalIP,
 		$Last = 100
 	); #end Param
+	
+    if ($Global:Toolbox.UsageLog) {
+        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
+    }
+
 	"$(get-date (get-date).ToUniversalTime() -f "MMM dd HH:mm:ss") Current UTC Date"
 
 	if ($PublicIP) {
@@ -126,10 +131,13 @@ Function Get-SRXLogs {
 #>
 
 Function Get-VPNForm {
+	Param(
+		$VPNProposal
+	); #end Param
 	
-		Param(
-			$VPNProposal
-		); #end Param
+    if ($Global:Toolbox.UsageLog) {
+        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
+    }
 	$VPNProposal = $VPNProposal.split("-")
 	
 <#
@@ -225,6 +233,10 @@ Function ConvertFrom-SRXScreenLogs {
 		#[Parameter(Mandatory=$True)]$DeviceName
 	); #end Param
 	
+    if ($Global:Toolbox.UsageLog) {
+        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
+    }
+	
 	#$Logs = $Logs -join "" -split "\n"
 	$Logs = ConvertFrom-CharArrayToString $Logs
 
@@ -270,6 +282,11 @@ Function Get-SRXScreenLogStatistics {
 		$Logs = (isrx "show log screen-log | last $ScreenDepth" $Devicename),
 		[switch]$NoConvert
 	); #end Param
+	
+    if ($Global:Toolbox.UsageLog) {
+        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
+    }
+
 	if (!($NoConvert)) {
 		$Logs = ConvertFrom-SRXScreenLogs $Logs
 	}; #end if NoConvert
@@ -291,6 +308,10 @@ Function Invoke-SRXScreenServer {
 		$ServerIP,
 		$Devicename
 	); #end Param
+	
+    if ($Global:Toolbox.UsageLog) {
+        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
+    }
 
 Invoke-JuniperCliCommand -Command "show log screen-log | match $ServerIP" -Device $Devicename
 Invoke-JuniperCliCommand -Command "show log screen-log.0.gz | match $ServerIP" -Device $Devicename
@@ -313,6 +334,10 @@ Function Get-ControlVPNDetails {
 		$Sitename,
 		[switch]$NoTicketOutput
 	); #end Param
+	
+    if ($Global:Toolbox.UsageLog) {
+        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
+    }
 	
 	$VPNData = Find-ControlS2SVPN -AccountAlias $AccountAlias -DataCenter $Datacenter -SiteName $Sitename
 	if (!($NoTicketOutput)) {
@@ -397,6 +422,10 @@ Function Get-SRXTunnelStatistics {
 		[ValidateSet("AU1", "CA1", "CA2", "CA3", "DE1", "GB1", "GB3", "IL1", "NE1", "NY1", "SG1", "UC1", "UT1", "VA1", "VA2", "WA1")]
 		$DataCenter
 	); #end Param
+	
+    if ($Global:Toolbox.UsageLog) {
+        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
+    }
 	#$stats = isrx "show security ipsec statistics index 300" ca3-srx-core
 
 	$OldTime = get-date
@@ -563,7 +592,11 @@ function Get-NextContactTime {
 	Param(
 		[Parameter(Mandatory=$True,Position=1)]
 		[Object]$LastContactDateTime# = (convert-time (get-date (Get-ZenDeskTicket 1342769).updated_at) -fromtz utc)
-	) #end Param
+	); #end Param
+	
+    if ($Global:Toolbox.UsageLog) {
+        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
+    }
 	if ($LastContactDateTime) {
 		$gd = get-date $LastContactDateTime
 		$Response = "Last customer contact: $(get-date $gd -format g) PDT `nUpdate customer before: $(get-date $gd.AddHours(8) -format g) PDT"
@@ -585,6 +618,10 @@ function UploadTo-AmazonUsingSDK {
 		[string] $SecretKey
 		#[string] $versionNumber
 		); #end Param
+	
+    if ($Global:Toolbox.UsageLog) {
+        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
+    }
 
 	Add-Type -Path "C:\Program Files (x86)\AWS SDK for .NET\bin\Net45\AWSSDK.s3.dll"
 
@@ -628,10 +665,13 @@ function Get-BareMetalInfoVA1 {
 }; #end Get-BareMetalInfoVA1
 
 Function Resolve-DNSName2 {
+	Param(
+		$DNSNames
+	); #end Param
 	
-		Param(
-			$DNSNames
-		); #end Param
+    if ($Global:Toolbox.UsageLog) {
+        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
+    }
 	
 $DNSNames | foreach { try {Resolve-DnsName $_ }catch{"$_"}}
 
@@ -657,6 +697,10 @@ function Get-PuttyLogin {
 		[string]$Datacenter,
 		[string]$Device = "srx"
 	); #end Param
+	
+    if ($Global:Toolbox.UsageLog) {
+        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
+    }	
 	
 	#Launch one Putty window for Core, another for CoretoEdge
 	start-process $UtilPath\putty
@@ -747,6 +791,10 @@ Function Get-PasswordCharacterType {
 		$Password = (Get-Clipboard),
 		[Switch]$NoClipboard
 	); #end Param
+	
+    if ($Global:Toolbox.UsageLog) {
+        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
+    }
 	$Output = $Password -creplace "[a-z]", 'lower ' -creplace "[A-Z]", 'upper '-replace "\d", 'number ' -replace '[~`!@#$%^&*(){}\[\]|"<>_+-=\\/?]','symbol ' -replace "[ ]{2,}"," space "
 	
 	$Output = "- Password pattern: $($Output)."
@@ -763,6 +811,10 @@ Function Find-ControlServer2 {
 		$ServerName,
 		$AccountAlias
 	); #end Param
+	
+    if ($Global:Toolbox.UsageLog) {
+        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
+    }
 	Find-ControlServer $ServerName -AccountAlias $AccountAlias -donttest | select *
 }; #end Find-ControlServer2
 
