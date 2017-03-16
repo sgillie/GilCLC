@@ -1,11 +1,11 @@
-# C:\Workbox\repos\GilCLC\GilCLC.ps1 Build: 110 2017-01-14T12:55:21 Copyright CLC Stephen Gillie 
+# C:\Workbox\repos\GilCLC\GilCLC.ps1 Build: 120 2017-03-04T12:10:01 Copyright CLC Stephen Gillie 
 # Update Path: 
 # Build : Update Notes
-# 104 : 58 : if _$PublicIP_ _  Write_Host _f green "The variable  PublicIP is $_$PublicIP_" _; #end if PublicIP
-# 105 : 58 : if _$InternalIP_ _  Write_Host _f green "The variable  InternalIP is $_$InternalIP_" _; #end if InternalIP
-# 106 : 245 :isrx "request security ike debug_enable local $_$VPNData.local.address_ remote $_$VPNData.remote.address_ level 11" $DataCenter_srx_core 
-# 107 : 736 : 	"- Password pattern_ $Output_"
-# 110 : 732 : Function ConvertFrom_CharArrayToString _     Param_     [string]$String    _; #end Param  $string _join "" _split "`n"    _; #end ConvertFrom_CharArrayToString
+# 116 : 763 :  Param_    $NoClipboard   _; #end Param
+# 117 : 786 : Function Convert_ZDTC _     Param_     $TicketNumber    _; #end Param    _; #end Convert_ZDTC
+# 118 : 789 : $g = Get_ZenDeskTicketComment 1353628 $r = $g[1].body _split "`n" _$r | Select_String 'Hello'_.LineNumber _$r | Select_String 'Thanks'_.LineNumber $r[__$r | Select_String 'Hello'_.LineNumber+1_..__$r | Select_String 'Thanks'_.LineNumber_3_]
+# 119 : 246 : if _$NoConvert_ _  #a _; # end if NoConvert
+# 120 : 239 :  Param_    $NoConvert   _; #end Param
 
 #$GilCLC = (Get-Module GilCLC).path
 $GilCLCVersion = ([int](gc $GilCLC)[0].split(" ")[3])
@@ -49,6 +49,10 @@ id  sizeGB partitionPaths
 
 #>
 
+Function Get-Invocation {
+$MyInvocation
+}; #end Get-Invocation
+
 #region Juniper
 
 Function Get-SRXLogs {
@@ -71,7 +75,7 @@ Function Get-SRXLogs {
 		"$DataCenter Edge Messages Log matches for $PublicIP"
 		isrx "show log messages | match $PublicIP | last $Last" "$($Datacenter)-srx-edge"
 		"$DataCenter Edge Configuration matches for $PublicIP"
-		isrx "show configuration | match $PublicIP | last $Last" "$($Datacenter)-srx-edge"
+		isrx "show configuration | display set | match $PublicIP | last $Last" "$($Datacenter)-srx-edge"
 	}; #end if PublicIP
 	
 	if ($InternalIP) {
@@ -86,9 +90,9 @@ Function Get-SRXLogs {
 		isrx "show log messages | match $InternalIP | last $Last" "$($Datacenter)-srx-core"
 
 		"$DataCenter Edge Configuration matches for $InternalIP"
-		isrx "show configuration | match $InternalIP | last $Last" "$($Datacenter)-srx-edge"
+		isrx "show configuration | display set | match $InternalIP | last $Last" "$($Datacenter)-srx-edge"
 		"$DataCenter Core Configuration matches for $InternalIP"
-		isrx "show configuration | match $InternalIP | last $Last" "$($Datacenter)-srx-core"
+		isrx "show configuration | display set | match $InternalIP | last $Last" "$($Datacenter)-srx-core"
 	}; #end if InternalIP
 
 	"$(get-date (get-date).ToUniversalTime() -f "MMM dd HH:mm:ss") Current UTC Date"
@@ -140,6 +144,33 @@ Function Get-VPNForm {
     }
 	$VPNProposal = $VPNProposal.split("-")
 	
+
+	if ($VPNProposal[1] -eq "p1") {
+		"
+		Phase 1: CLC / Customer
+		Mode: $($VPNData.ike.mode)
+		Protocol: $($VPNData.ipsec.protocol)
+		EncAlgo: $($VPNProposal[3])
+		HashAlgo: $($VPNProposal[5])
+		PSK Hint: *** / ***
+		DH Group: $($VPNProposal[4])
+		Lifetime: $($VPNProposal[6])
+		DPD: $($VPNData.ike.deadPeerDetection)
+		NAT-T: $($VPNData.ike.natTraversal)
+		Remote ID: $($VPNData.ike.RemoteID)
+		"
+	} elseif ($VPNProposal[1] -eq "p2") {
+		"
+		Phase 2: CLC / Customer
+		EncAlgo: $($VPNProposal[3])
+		HashAlgo: $($VPNProposal[4])
+		PFS - DH Group: $($VPNProposal[6])
+		Lifetime: $($VPNProposal[5])
+		"
+	}; #end if VPNProposal
+
+}; #end Get-VPNForm
+
 <#
 	Get-VPNForm "c-p1-psk-aes256-g2-sha-10800"
 	Get-VPNForm "c-p2-esp-3des-sha-3600-no"
@@ -201,36 +232,12 @@ Lifetime: 86400? / 86400?
 
 	"
 #>
-	if ($VPNProposal[1] -eq "p1") {
-		"
-		Phase 1: CLC / Customer
-		Mode: $($VPNData.ike.mode)
-		Protocol: $($VPNData.ipsec.protocol)
-		EncAlgo: $($VPNProposal[3])
-		HashAlgo: $($VPNProposal[5])
-		PSK Hint: *** / ***
-		DH Group: $($VPNProposal[4])
-		Lifetime: $($VPNProposal[6])
-		DPD: $($VPNData.ike.deadPeerDetection)
-		NAT-T: $($VPNData.ike.natTraversal)
-		Remote ID: $($VPNData.ike.RemoteID)
-		"
-	} elseif ($VPNProposal[1] -eq "p2") {
-		"
-		Phase 2: CLC / Customer
-		EncAlgo: $($VPNProposal[3])
-		HashAlgo: $($VPNProposal[4])
-		PFS - DH Group: $($VPNProposal[6])
-		Lifetime: $($VPNProposal[5])
-		"
-	}; #end if VPNProposal
-
-}; #end Get-VPNForm
 
 Function ConvertFrom-SRXScreenLogs {
 	Param(
-		$Logs # = (isrx "show log screen-log" $Devicename)
+		$Logs, # = (isrx "show log screen-log" $Devicename)
 		#[Parameter(Mandatory=$True)]$DeviceName
+		[switch]$NoConvert
 	); #end Param
 	
     if ($Global:Toolbox.UsageLog) {
@@ -238,20 +245,27 @@ Function ConvertFrom-SRXScreenLogs {
     }
 	
 	#$Logs = $Logs -join "" -split "\n"
-	$Logs = ConvertFrom-CharArrayToString $Logs
+	if (!($NoConvert)) {
+		$Logs = ConvertFrom-CharArrayToString -NoClipboard $Logs
+	}; # end if NoConvert
 
 	foreach ($line in $Logs) {
 		$line = $line -replace "  "," - " -replace "-N0 "," " -replace "-N1 "," " -replace " RT_IDS: "," - " -replace " source: "," - " -replace ", destination: "," - " -replace ", zone name: "," - " -replace ", interface name: "," - " -replace ", action: "," - "  -replace ",",""
 		#This uses a little-known trick of "splatting" each line from the -split into these variables, in order. So the first line goes in $Time0, then the next in $Time1, then 3rd line in $DeviceName etc.
-		#$Time0,$Time1,$DeviceName,$IDS,$Source,$Destination,$Zone,$Interface,$Action = $line -split " - "
-		$Time0,$DeviceName,$IDS,$Source,$Destination,$Zone,$Interface,$Action = $line -split " - "
+		
+		if ((get-date -f dd) -lt 10) {
+			$Time0,$Time1,$DeviceName,$IDS,$Source,$Destination,$Zone,$Interface,$Action = $line -split " - "
+			$Timestamp = "$($Time0) $($Time1)"
+		} else {
+			$Timestamp,$DeviceName,$IDS,$Source,$Destination,$Zone,$Interface,$Action = $line -split " - "
+		}; # end if get-date -f dd -date 2/09/2017
 		
 		#$line = $line -replace "The last message repeats $N times",$Logs.incrementor[-1] #Pseudo-code to copy the previous line.
 		
 		#$Timestamp = "$($Line[0]) $($Line[1])" #$(get-date -format yyyy) $($Line[3])"  
 		#$Timestamp = get-date ($line[0] + " " + (get-date -format yyyy) + " " + $line[1]) #Still debugging this
-		#$Timestamp = "$($Time0) $($Time1)"
-		$Timestamp = $Time0
+
+		
 		$Source = $Source -split ":"
 		$Destination = $Destination -split ":"
 		$Interface = $Interface -split "[.]"
@@ -280,7 +294,8 @@ Function Get-SRXScreenLogStatistics {
 		[Int]$TopResults = 5,
 		[Int]$ScreenDepth = 250,
 		$Logs = (isrx "show log screen-log | last $ScreenDepth" $Devicename),
-		[switch]$NoConvert
+		[switch]$NoConvert,
+		[switch]$NoConvert2
 	); #end Param
 	
     if ($Global:Toolbox.UsageLog) {
@@ -288,7 +303,11 @@ Function Get-SRXScreenLogStatistics {
     }
 
 	if (!($NoConvert)) {
-		$Logs = ConvertFrom-SRXScreenLogs $Logs
+		if (!($NoConvert2)) {
+			$Logs = ConvertFrom-SRXScreenLogs $Logs
+		}else {
+			$Logs = ConvertFrom-SRXScreenLogs $Logs -NoConvert
+		}; #end if NoConvert
 	}; #end if NoConvert
 	foreach ($NoteProperty in ($Logs | Get-Member -MemberType NoteProperty).name) {
 		$LogsHarvest = $Logs | group $NoteProperty -NoElement | select Count,Name,PercentOfTotal | sort count -Descending | select -First $TopResults
@@ -306,7 +325,7 @@ Function Get-SRXScreenLogStatistics {
 Function Invoke-SRXScreenServer {
 		Param(
 		$ServerIP,
-		$Devicename
+		[ValidateSet('AU1-SRX-EDGE','AU1-SRX-CORE','CA1-SRX-EDGE','CA1-SRX-CORE','CA2-SRX-EDGE','CA2-SRX-CORE','CA3-SRX-EDGE','CA3-SRX-CORE','DE1-SRX-EDGE','DE1-SRX-CORE','GB1-SRX-EDGE','GB1-SRX-CORE','GB3-SRX-EDGE','GB3-SRX-CORE','IL1-SRX-EDGE','IL1-SRX-CORE','NE1-SRX-EDGE','NE1-SRX-CORE','NY1-SRX-EDGE','NY1-SRX-CORE','SG1-SRX-EDGE','SG1-SRX-CORE','UC1-SRX-EDGE','UC1-SRX-CORE','UT1-SRX-EDGE','UT1-SRX-CORE','VA1-SRX-EDGE','VA1-SRX-CORE','VA2-SRX-EDGE','VA2-SRX-CORE','WA1-SRX-EDGE','WA1-SRX-CORE')]$DeviceName
 	); #end Param
 	
     if ($Global:Toolbox.UsageLog) {
@@ -327,8 +346,9 @@ $l = $m.split(' /')[-2]
 
 }; #end Invoke-ScreenServer
 	
-Function Get-ControlVPNDetails {
+Function Test-ControlVPNStatus {
 	Param(
+		[ValidateSet("AU1", "CA1", "CA2", "CA3", "DE1", "GB1", "GB3", "IL1", "NE1", "NY1", "SG1", "UC1", "UT1", "VA1", "VA2", "WA1")]
 		$DataCenter,
 		$AccountAlias,
 		$Sitename,
@@ -381,12 +401,15 @@ Function Get-ControlVPNDetails {
 	$JuniperVPNData = try {
 	Test-JuniperS2SVPN -DataCenter $DataCenter -PeerPublicIp $($VPNData.remote.address) -PeerSubnet $($VPNData.remote.subnets[0]) -ClcSubnet $($VPNData.local.subnets[0]) 
 	} catch {
+		Get-FiveSecondKMD -Datacenter $Datacenter -LocalSRXPublicIP $VPNData.local.address -RemoteRouterPublicIP $VPNData.remote.address
+		<#
 		isrx "request security ike debug-enable local $($VPNData.local.address) remote $($VPNData.remote.address) level 11" $DataCenter-srx-core 
 		sleep 5
 		isrx "request security ike debug-disable" $DataCenter-srx-core 
 		$KMDdata = isrx "show log kmd | match $($VPNData.remote.address) " $DataCenter-srx-core 
 		"KMD logs:"
 		$KMDdata
+		#>
 	}
 	#No Peer or CLC for Phase 1 only.
 	$JuniperVPNData
@@ -411,16 +434,36 @@ Invoke-JuniperCliCommand -Command "request security ike debug-disable" -device "
 
 #>
 
+Function Get-FiveSecondKMD {
+	Param(
+		[ValidateSet("AU1", "CA1", "CA2", "CA3", "DE1", "GB1", "GB3", "IL1", "NE1", "NY1", "SG1", "UC1", "UT1", "VA1", "VA2", "WA1")]$DataCenter,
+		[ipaddress]$LocalSRXPublicIP,
+		[ipaddress]$RemoteRouterPublicIP
+	); #end Param
+	
+	$DebugStatus = isrx 'show security ike debug-status' $DataCenter-srx-core 
+	
+	if ( ($DebugStatus -split "-")[-1].trim() ) {
+		isrx "request security ike debug-enable local $($LocalSRXPublicIP) remote $($RemoteRouterPublicIP) level 11" $DataCenter-srx-core 
+		sleep 5
+		isrx "request security ike debug-disable" $DataCenter-srx-core 
+		$KMDdata = isrx "show log kmd | match $($RemoteRouterPublicIP) " $DataCenter-srx-core 
+		"KMD logs:"
+		$KMDdata
+	} else {
+	"KMD already running:"
+	$DebugStatus
+	}; # end if ($DebugStatus -split "-")[-1].trim()	
+
+}; #end Get-FiveSecondKMD
 
 
 Function Get-SRXTunnelStatistics {
 	Param(
 		[Parameter(Mandatory=$True)]
-		[int]$index,
-		[int]$Node = "primary",
-		[Parameter(Mandatory=$True)]
-		[ValidateSet("AU1", "CA1", "CA2", "CA3", "DE1", "GB1", "GB3", "IL1", "NE1", "NY1", "SG1", "UC1", "UT1", "VA1", "VA2", "WA1")]
-		$DataCenter
+		[ValidateSet("AU1", "CA1", "CA2", "CA3", "DE1", "GB1", "GB3", "IL1", "NE1", "NY1", "SG1", "UC1", "UT1", "VA1", "VA2", "WA1")]$DataCenter,
+		[Parameter(Mandatory=$True)][int]$index,
+		$Node = "primary"
 	); #end Param
 	
     if ($Global:Toolbox.UsageLog) {
@@ -431,34 +474,34 @@ Function Get-SRXTunnelStatistics {
 	$OldTime = get-date
 	$TunnelStats = Invoke-JuniperCliCommand -Command "show security ipsec statistics index $Index node $Node" -Device $DataCenter-srx-core
 	#$TunnelStats = $TunnelStats  -join "" -split "\n"
-	$TunnelStats = ConvertFrom-CharArrayToString $TunnelStats 
+	$TunnelStats = ConvertFrom-CharArrayToString -NoClipboard $TunnelStats 
 
-	$OldEncBytes = $stats | select-string "Encrypted bytes:"
+	$OldEncBytes = $TunnelStats | select-string "Encrypted bytes:"
 	$OldEncBytes = ($OldEncBytes -split "[:]\s+")[1]
 
-	$OldDecBytes = $stats | select-string "Decrypted bytes:"
+	$OldDecBytes = $TunnelStats | select-string "Decrypted bytes:"
 	$OldDecBytes = ($OldDecBytes -split "[:]\s+")[1]
 
-	$OldEncPackets = $stats | select-string "Encrypted packets:"
+	$OldEncPackets = $TunnelStats | select-string "Encrypted packets:"
 	$OldEncPackets = ($OldEncPackets -split "[:]\s+")[1]
 
-	$OldDecPackets = $stats | select-string "Decrypted packets:"
+	$OldDecPackets = $TunnelStats | select-string "Decrypted packets:"
 	$OldDecPackets = ($OldDecPackets -split "[:]\s+")[1]
 
 	$NewTime = get-date
 	$TunnelStats = Invoke-JuniperCliCommand -Command "show security ipsec statistics index $Index node $Node" -Device $DataCenter-srx-core
-	$TunnelStats = ConvertFrom-CharArrayToString $TunnelStats 
+	$TunnelStats = ConvertFrom-CharArrayToString -NoClipboard $TunnelStats 
 
-	$NewEncBytes = $stats | select-string "Encrypted bytes:"
+	$NewEncBytes = $TunnelStats | select-string "Encrypted bytes:"
 	$NewEncBytes = ($NewEncBytes -split "[:]\s+")[1]
 
-	$NewDecBytes = $stats | select-string "Decrypted bytes:"
+	$NewDecBytes = $TunnelStats | select-string "Decrypted bytes:"
 	$NewDecBytes = ($NewDecBytes -split "[:]\s+")[1]
 
-	$NewEncPackets = $stats | select-string "Encrypted packets:"
+	$NewEncPackets = $TunnelStats | select-string "Encrypted packets:"
 	$NewEncPackets = ($NewEncPackets -split "[:]\s+")[1]
 
-	$NewDecPackets = $stats | select-string "Decrypted packets:"
+	$NewDecPackets = $TunnelStats | select-string "Decrypted packets:"
 	$NewDecPackets = ($NewDecPackets -split "[:]\s+")[1]
 
 
@@ -599,57 +642,14 @@ function Get-NextContactTime {
     }
 	if ($LastContactDateTime) {
 		$gd = get-date $LastContactDateTime
-		$Response = "Last customer contact: $(get-date $gd -format g) PDT `nUpdate customer before: $(get-date $gd.AddHours(8) -format g) PDT"
+		$Response = "Last customer contact: $(get-date $gd -format g) PST `nUpdate customer before: $(get-date $gd.AddHours(8) -format g) PST"
 		return $Response
-		#write-host "Last customer contact:" (get-date $gd -format g) "PDT" ; write-host "Update customer before:" (get-date $gd.AddHours(8) -format g) "PDT"
+		#write-host "Last customer contact:" (get-date $gd -format g) "PST" ; write-host "Update customer before:" (get-date $gd.AddHours(8) -format g) "PST"
 	} else {
 		write-host -f red "Please enter a DateTime Object, surrounded by 'quotes'."
 	}; #end if LastContactDateTime
-#write-host "Last customer contact:" (get-date $LastContactDateTime -format g) "PDT" ; write-host "Update customer before:" (get-date $nextcontact -format g) "PDT"
+#write-host "Last customer contact:" (get-date $LastContactDateTime -format g) "PST" ; write-host "Update customer before:" (get-date $nextcontact -format g) "PST"
 }; #end Get-NextContactTime
-
-function UploadTo-AmazonUsingSDK {
-#Needs fixing
-#https://stackoverflow.com/questions/29847417/alternative-to-upload-files-to-s3-from-powershell-without-using-aws-sdk-for-net
-	param(
-		[string] $sourceLocation, 
-		[string] $bucketName, 
-		[string] $AccessKey,
-		[string] $SecretKey
-		#[string] $versionNumber
-		); #end Param
-	
-    if ($Global:Toolbox.UsageLog) {
-        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
-    }
-
-	Add-Type -Path "C:\Program Files (x86)\AWS SDK for .NET\bin\Net45\AWSSDK.s3.dll"
-
-	$s3Config=New-Object Amazon.S3.AmazonS3Config
-	$s3Config.UseHttp = $false
-	$s3Config.ServiceURL = "https://useast.os.ctl.io" #"https://s3-eu-west-1.amazonaws.com"
-	$s3Config.BufferSize = 1024 * 32
-
-	$client=[Amazon.AWSClientFactory]::CreateAmazonS3Client($AccessKey,$SecretKey,$s3Config)
-
-	$transferUtility = New-Object -TypeName Amazon.S3.Transfer.TransferUtility($client)   
-
-	$files = Get-ChildItem $sourceLocation
-
-	foreach ($FileName in $files) {		
-		$amazonKey = $versionNumber + '/' + $FileName		
-		Write-Host $amazonKey
-		Write-Host $FileName 
-		Write-Host $FileName.FullName
-
-		$transferUtilRequest = New-Object -TypeName Amazon.S3.Transfer.TransferUtilityUploadRequest
-		$transferUtilRequest.BucketName = $bucketName
-		$transferUtilRequest.FilePath = $FileName.FullName
-		$transferUtilRequest.Key = $amazonKey
-		$transferUtilRequest.AutoCloseStream = $true
-		$transferUtility.Upload($transferUtilRequest)
-	}; #end foreach $FileName
-}; #end UploadTo-AmazonUsingSDK
 
 #Baremetal Info and status - only VA1 at this time, need to add UC1 and other locations. Stopped working at some point.
 function Get-BareMetalInfoVA1 {
@@ -752,39 +752,6 @@ function Get-PuttyLogin {
 
 }; #end Get-PuttyLogin
 
-Function Convert-ArrayToString {
-	#(Get-Clipboard) -replace "`n"," - " -replace ' -  - ',"`n" | clip
-	#(Get-Clipboard) -join "" -split "\n" -join " - " -replace ' -  - ',"`n" | clip
-	#(Get-Clipboard) ConvertFrom-CharArrayToString -join " - " -replace ' -  - ',"`n" | clip
-
-	(Get-Clipboard) -join " - " -replace ' -  - ',"`n" | clip
-	
-}; #end Convert-SpaceDeltoHypehnDel
-
-Function Convert-SpaceDeltoHypehnDel {
-	#(Get-Clipboard) -join "" -split "\n" -replace '\s+'," - " -replace '\t+'," - " | clip
-	#(Get-Clipboard) ConvertFrom-CharArrayToString -replace '\s+'," - " -replace '\t+'," - " | clip
-	(Get-Clipboard) -replace '\s+'," - " -replace '\t+'," - " | clip
-	
-}; #end Convert-SpaceDeltoHypehnDel
-
-Function ConvertFrom-ParagraphtoBulletList {
-	(Get-Clipboard) -replace  "[.] ",".`n- " | clip
-	(Get-Clipboard) -replace  "[?] ","?`n- " | clip
-	(Get-Clipboard) -replace  "[!] ","!`n- " | clip
-	(Get-Clipboard) -replace  "[:] ",":`n- " | clip
-	(Get-Clipboard) -replace  "[;] ",";`n- " | clip
-	
-}; #end Convert-SpaceDeltoHypehnDel
-
-Function ConvertFrom-CharArrayToString {
-	Param(
-		[string]$String
-	); #end Param
-	$string -join "" -split "`n"
-	
-}; #end ConvertFrom-CharArrayToString
-
 Function Get-PasswordCharacterType {
 	Param(
 		[Parameter(ValueFromPipeline=$True)]
@@ -815,10 +782,76 @@ Function Find-ControlServer2 {
     if ($Global:Toolbox.UsageLog) {
         Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
     }
-	Find-ControlServer $ServerName -AccountAlias $AccountAlias -donttest | select *
+	Find-ControlServer $ServerName -AccountAlias $AccountAlias | select *
 }; #end Find-ControlServer2
 
+Function ConvertFrom-ControlPartitions {
+	
+((Get-Clipboard) -join " " -replace '\\',"\ " -replace " GB","" -replace "%","%`n" ).trim() | clip
+Convert-SpaceDeltoHypehnDel
 
+}; #end ConvertFrom-ControlPartitions
+
+Function Convert-ZDTC {
+		Param(
+			$TicketNumber,
+			[switch]$NoClipboard
+		); #end Param
+	
+	$GC = (Get-Clipboard).trim()
+	$GC = $GC -replace "https://t3n.zendesk.com/agent/tickets/",""
+    if ($GC.length -eq 7) {
+        $Ticketnumber = $GC
+    }; #end if Get-Clipboard
+    
+    #Break if no ticket number.
+    if (!($Ticketnumber)) {break}
+    
+    $Newline = "`n"
+	[array]$AliasGAP += $Newline
+	[array]$ServerLine += $Newline
+	[string]$VeeamServerName = "VeeamServerName"
+	
+	$ZenDeskTicketComments = Get-ZenDeskTicketComment $TicketNumber
+	$output = @()
+	$counter = 0
+	foreach ($Comment in $ZenDeskTicketComments) {
+		$counterstring = $counter.tostring()
+		$counter++
+		$PublicComment = if ($Comment.public) {"Public"} else {"Internal"}; #end if Comment
+		$CommentBody = $Comment.body -split "`n"
+		$UserName = (Get-ZenDeskObject -ObjectId $Comment.author_id -ObjectType User).name
+		
+<#
+		try {
+			[int]$CommentBodyTopLine = ($CommentBody | Select-String 'Hello').LineNumber
+			#[int]$CommentBodyTopLine = ($CommentBody | Select-String 'Hello[A-Z][a-z]+[,]').LineNumber
+		} catch {
+			[int]$CommentBodyTopLine = 0
+		}; #end try
+
+		try {
+			[int]$CommentBodyBottomLine = ($CommentBody | Select-String 'Thanks,').LineNumber
+		} catch {
+			[int]$CommentBodyBottomLine = 0
+		}; #end try
+
+		if ($CommentBodyBottomLine -le 0) {
+			[int]$CommentBodyBottomLine = $CommentBody.length
+		}; # end if CommentBodyBottomLine
+#>
+		if ($CommentBody[0] -like "Customer Account Alias*") {
+			$output += "$($counterstring). $UserName made a Handover Notes $PublicComment update." + $Newline
+		} else {
+			$output += "$($counterstring). $UserName made the following $PublicComment update:" + $Newline
+			$output += "- " + (ConvertFrom-ParagraphtoBulletList -NoClipboard $CommentBody) + $Newline
+			#$output += "- " + (ConvertFrom-ParagraphtoBulletList -NoClipboard $CommentBody[$CommentBodyTopLine..$CommentBodyBottomLine])
+		}; # end if PublicComment
+		
+	}; # end foreach Comment
+	$output = $output -replace "Thanks,""" -replace "","" | select -unique
+	$output
+}; #end Convert-ZDTC
 #endregion
 
 #region VMWare
@@ -961,6 +994,7 @@ function Convert-CPUReady {
 
 
 #endregion
+ 
  
 <#
 #>
