@@ -11,130 +11,138 @@
 $GilCLCVersion = ([int](gc $GilCLC)[0].split(" ")[3])
 Write-Host -f green "GilCLC.ps1 Build: $GilCLCVersion"
 
+# [<]{7}[ ][H][E][A][D].*\r\n.*\r\n[=]{7}
+# [>>>>>>>].*\r
 
+Function Get-MySharona([Scriptblock]$Param, [Scriptblock]$Callback) {
 <#
-#Splat into array...
-$VMs | foreach { $b += $_ }
-$b = $b.split("`n")
-$b
-
-$ips = "@
-@"
-$ips = $ips -split "`n"
-
-
-#Get path from registry
-(Get-ItemProperty -Path "Registry::HKLM\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH).path
-
-#Append appendVariable to system path
-$appendVariable = ""
-Set-ItemProperty -Path "Registry::HKLM\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH -Value ( (Get-ItemProperty -Path "Registry::HKLM\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH).path + ';' + $appendVariable )
-
-
-$server = fcs -donttest VA1TI2DRSQL01
-connect-viserver $server.vcenter
-get-vm $server.name | fl *
-
-$server.details.partitions
-sizeGB path
-59.996 C:\
-1023.997 E:\
-
-$server.details.disksFromMain
-id  sizeGB partitionPaths
-0:0     60 {C:\}
-0:1   1024 {E:\}
-
-
-
+.SYNOPSIS
+	Demonstration of callbacks.
+.DESCRIPTION
+	 Author   : Stephen Gillie
+.PARAMETER Param
+	 Parameter to test.
+.PARAMETER Callback
+	 Scriptblock to invoke if the Param tests True.
+.EXAMPLE
+	 Get-MySharona (Test-Connection ctl.io) {write-host "Test successful."}
+.INPUTS
+	[Scriptblock]
+	[Scriptblock]
+.OUTPUTS
 #>
-
-Function Get-Invocation {
-$MyInvocation
-}; #end Get-Invocation
+	if($param) {
+		& $callback
+	}
+}; #end Get-MySharona
 
 #region Juniper
 
 Function Get-SRXLogs {
+<#
+.SYNOPSIS
+	Looks up a server in Control, then reviews SRX logs for 
+.DESCRIPTION
+	 Author   : Stephen Gillie
+.PARAMETER 
+	 Author   : Stephen Gillie
+.PARAMETER 
+.PARAMETER 
+.PARAMETER 
+.PARAMETER 
+.EXAMPLE
+	 Get-MySharona (Test-Connection ctl.io) {write-host "Test successful."}
+.INPUTS
+	[Scriptblock]
+	[Scriptblock]
+.OUTPUTS
+#>
 	Param(
-		$Datacenter,
-		$PublicIP,
-		$InternalIP,
-		$Last = 100
+		[string]$ServerName,
+		[string]$Datacenter = $ServerName.Substring(0,3),
+		$Server = $(try {Find-ControlServer $ServerName} catch{}),
+		$PublicIP = $($Server.Details.IPAddresses.Public),
+		$InternalIP = $($Server.Details.IPAddresses.Internal),
+		[int]$Last = 100
 	); #end Param
-	
     if ($Global:Toolbox.UsageLog) {
         Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
     }
 
 	"$(get-date (get-date).ToUniversalTime() -f "MMM dd HH:mm:ss") Current UTC Date"
 
-	if ($PublicIP) {
-		"$DataCenter Edge Screen Log matches for $PublicIP"
-		isrx "show log screen-log | match $PublicIP | last $Last" "$($Datacenter)-srx-edge"
-		"$DataCenter Edge Messages Log matches for $PublicIP"
-		isrx "show log messages | match $PublicIP | last $Last" "$($Datacenter)-srx-edge"
-		"$DataCenter Edge Configuration matches for $PublicIP"
-		isrx "show configuration | display set | match $PublicIP | last $Last" "$($Datacenter)-srx-edge"
-	}; #end if PublicIP
-	
-	if ($InternalIP) {
-		"$DataCenter Edge Screen Log matches for $InternalIP"
-		isrx "show log screen-log | match $InternalIP | last $Last" "$($Datacenter)-srx-edge"
-		"$DataCenter Core Screen Log matches for $InternalIP"
-		isrx "show log screen-log | match $InternalIP | last $Last" "$($Datacenter)-srx-core"
+	foreach ($IPaddress in ($PublicIP,$InternalIP)) {
+		"$DataCenter Edge Screen Log matches for $IPaddress"
+		isrx "show log screen-log | match $IPaddress | last $Last" "$($Datacenter)-srx-edge"
+		"$DataCenter Core Screen Log matches for $IPaddress"
+		isrx "show log screen-log | match $IPaddress | last $Last" "$($Datacenter)-srx-core"
 
-		"$DataCenter Edge Messages Log matches for $InternalIP"
-		isrx "show log messages | match $InternalIP | last $Last" "$($Datacenter)-srx-edge"
-		"$DataCenter Core Messages Log matches for $InternalIP"
-		isrx "show log messages | match $InternalIP | last $Last" "$($Datacenter)-srx-core"
+		"$DataCenter Edge Messages Log matches for $IPaddress"
+		isrx "show log messages | match $IPaddress | last $Last" "$($Datacenter)-srx-edge"
+		"$DataCenter Core Messages Log matches for $IPaddress"
+		isrx "show log messages | match $IPaddress | last $Last" "$($Datacenter)-srx-core"
 
-		"$DataCenter Edge Configuration matches for $InternalIP"
-		isrx "show configuration | display set | match $InternalIP | last $Last" "$($Datacenter)-srx-edge"
-		"$DataCenter Core Configuration matches for $InternalIP"
-		isrx "show configuration | display set | match $InternalIP | last $Last" "$($Datacenter)-srx-core"
+		"$DataCenter Edge Configuration matches for $IPaddress"
+		isrx "show configuration | display set | match $IPaddress | last $Last" "$($Datacenter)-srx-edge"
+		"$DataCenter Core Configuration matches for $IPaddress"
+		isrx "show configuration | display set | match $IPaddress | last $Last" "$($Datacenter)-srx-core"
 	}; #end if InternalIP
 
 	"$(get-date (get-date).ToUniversalTime() -f "MMM dd HH:mm:ss") Current UTC Date"
 }; #end Get-SRXLogs
-
-<#
-	if ($InternalIP) {
-		if ($PublicIP) {
-			"$DataCenter Edge Screen Log matches for $PublicIP"
-			isrx "show log screen-log | match $PublicIP | last $Last" "$($Datacenter)-srx-edge"
-			"$DataCenter Edge Screen Log matches for $InternalIP & PublicIP"
-			isrx 'show log screen-log | match "$InternalIP|$PublicIP" | last $Last' "$($Datacenter)-srx-edge"
-
-			"$DataCenter Edge Messages Log matches for $PublicIP"
-			isrx "show log messages | match $PublicIP | last $Last" "$($Datacenter)-srx-edge"
-
-			"$DataCenter Edge Configuration matches for $PublicIP"
-			isrx "show configuration | match $PublicIP | last $Last" "$($Datacenter)-srx-edge"
-		} else {
-
-		}; #end if PublicIP
-
-		"$DataCenter Core Screen Log matches for $InternalIP"
-		isrx "show log screen-log | match $InternalIP | last $Last" "$($Datacenter)-srx-core"
-
-		"$DataCenter Edge Messages Log matches for $InternalIP"
-		isrx "show log messages | match $InternalIP | last $Last" "$($Datacenter)-srx-edge"
-		"$DataCenter Core Messages Log matches for $InternalIP"
-		isrx "show log messages | match $InternalIP | last $Last" "$($Datacenter)-srx-core"
-
-		"$DataCenter Edge Configuration matches for $InternalIP"
-		isrx "show configuration | match $InternalIP | last $Last" "$($Datacenter)-srx-edge"
-		"$DataCenter Core Configuration matches for $InternalIP"
-		isrx "show configuration | match $InternalIP | last $Last" "$($Datacenter)-srx-core"
-	}; #end if InternalIP
-
-	"$(get-date (get-date).ToUniversalTime() -f "MMM dd HH:mm:ss") Current UTC Date"
-}; #end Get-SRXLogs
-
-#>
 
 Function Get-VPNForm {
+<#
+	Get-VPNForm "c-p1-psk-aes256-g2-sha-10800"
+	Get-VPNForm "c-p2-esp-3des-sha-3600-no"
+	
+	
+	$VPNProposal = "c-p1-psk-aes256-g2-sha-10800"
+	$VPNProposal = $VPNProposal.split("-")
+	0..5 | foreach  {" $_ $($VPNProposal[$_])" }
+	0 c
+	1 p1
+	2 psk
+	3 aes256
+	4 g2
+	5 sha
+
+	$VPNProposal = "c-p2-esp-3des-sha-3600-no"
+	$VPNProposal = $VPNProposal.split("-")
+	1..5 | foreach  {" $_ $($VPNProposal[$_])" }
+	0 c
+	1 p2
+	2 esp
+	3 3des
+	4 sha
+	5 3600
+	
+S2SVPN: CLC / Customer
+Location: CLC / Customer
+Public IP: 0.0.0.0 / 0.0.0.0
+CLC Encrypted Subnets: 0.0.0.0/0 
+Customer Encrypted Subnets: 0.0.0.0/0 
+
+Phase 1: CLC / Customer
+Mode: Main / Main?
+Protocol: ESP / ESP?
+EncAlgo: AES256? / AES256?
+HashAlgo: SHA256? / SHA256?
+PSK Hint: *** / ***
+DH Group: Group 2? / Group 2?
+Lifetime: 86400? / 86400?
+DPD: Off? / Off?
+NAT-T: Off? / Off?
+Remote ID: N/A? / N/A?
+
+Phase 2: CLC / Customer
+EncAlgo: AES256? / AES256?
+HashAlgo: SHA256? / SHA256?
+PFS: Off? / Off?
+DH Group: Group 2? / Group 2?
+Lifetime: 86400? / 86400?
+#>
+
 	Param(
 		$VPNProposal
 	); #end Param
@@ -171,68 +179,7 @@ Function Get-VPNForm {
 
 }; #end Get-VPNForm
 
-<#
-	Get-VPNForm "c-p1-psk-aes256-g2-sha-10800"
-	Get-VPNForm "c-p2-esp-3des-sha-3600-no"
-	
-	
-	$VPNProposal = "c-p1-psk-aes256-g2-sha-10800"
-	$VPNProposal = $VPNProposal.split("-")
-	0..5 | foreach  {" $_ $($VPNProposal[$_])" }
-	0 c
-	1 p1
-	2 psk
-	3 aes256
-	4 g2
-	5 sha
-
-	$VPNProposal = "c-p2-esp-3des-sha-3600-no"
-	$VPNProposal = $VPNProposal.split("-")
-	1..5 | foreach  {" $_ $($VPNProposal[$_])" }
-	0 c
-	1 p2
-	2 esp
-	3 3des
-	4 sha
-	5 3600
  
-S2SVPN: CLC / Customer
-Location: CLC / Customer
-Public IP: 0.0.0.0 / 0.0.0.0
-CLC Encrypted Subnets: 0.0.0.0/0 
-Customer Encrypted Subnets: 0.0.0.0/0 
-
-Phase 1: CLC / Customer
-Mode: Main / Main?
-Protocol: ESP / ESP?
-EncAlgo: AES256? / AES256?
-HashAlgo: SHA256? / SHA256?
-PSK Hint: *** / ***
-DH Group: Group 2? / Group 2?
-Lifetime: 86400? / 86400?
-DPD: Off? / Off?
-NAT-T: Off? / Off?
-Remote ID: N/A? / N/A?
-
-Phase 2: CLC / Customer
-EncAlgo: AES256? / AES256?
-HashAlgo: SHA256? / SHA256?
-PFS: Off? / Off?
-DH Group: Group 2? / Group 2?
-Lifetime: 86400? / 86400?
-
-	
-	"
-	S2SVPN: CLC / Customer
-	Location: $Datacenter / $Sitename
-	Public IP: $($VPNData.local.address) / $($VPNData.remote.address)
-	CLC Encrypted Subnets: $($VPNData.local.subnets)
-	Customer Encrypted Subnets: 
-	$($VPNData.remote.subnets)
-
-	"
-#>
-
 Function ConvertFrom-SRXScreenLogs {
 	Param(
 		$Logs, # = (isrx "show log screen-log" $Devicename)
@@ -253,7 +200,7 @@ Function ConvertFrom-SRXScreenLogs {
 		$line = $line -replace "  "," - " -replace "-N0 "," " -replace "-N1 "," " -replace " RT_IDS: "," - " -replace " source: "," - " -replace ", destination: "," - " -replace ", zone name: "," - " -replace ", interface name: "," - " -replace ", action: "," - "  -replace ",",""
 		#This uses a little-known trick of "splatting" each line from the -split into these variables, in order. So the first line goes in $Time0, then the next in $Time1, then 3rd line in $DeviceName etc.
 		
-		if ((get-date -f dd) -lt 10) {
+		if ((get-date(cftt (get-date) -totz utc) -f dd) -lt 10) {
 			$Time0,$Time1,$DeviceName,$IDS,$Source,$Destination,$Zone,$Interface,$Action = $line -split " - "
 			$Timestamp = "$($Time0) $($Time1)"
 		} else {
@@ -322,6 +269,7 @@ Function Get-SRXScreenLogStatistics {
 	}; #end foreach NoteProperty
 }; #end Get-SRXScreenLogStatistics
 
+
 Function Invoke-SRXScreenServer {
 		Param(
 		$ServerIP,
@@ -345,6 +293,7 @@ $l = $m.split(' /')[-2]
 
 
 }; #end Invoke-ScreenServer
+
 	
 Function Test-ControlVPNStatus {
 	Param(
@@ -357,35 +306,39 @@ Function Test-ControlVPNStatus {
 	
     if ($Global:Toolbox.UsageLog) {
         Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
-    }
+    }; #end if Global
 	
 	$VPNData = Find-ControlS2SVPN -AccountAlias $AccountAlias -DataCenter $Datacenter -SiteName $Sitename
+	if (!($VPNData)) {
+		Write-Error "VPN not found."
+		break
+    }; #end if VPNData
 	if (!($NoTicketOutput)) {
 		"
-		S2SVPN: CLC / Customer
-		Location: $Datacenter / $Sitename
-		Public IP: $($VPNData.local.address) / $($VPNData.remote.address)
-		CLC Encrypted Subnets: $($VPNData.local.subnets)
-		Customer Encrypted Subnets: 
-		$($VPNData.remote.subnets)
+S2SVPN: CLC / Customer
+Location: $Datacenter / $Sitename
+Public IP: $($VPNData.local.address) / $($VPNData.remote.address)
+CLC Encrypted Subnets: $($VPNData.local.subnets)
+Customer Encrypted Subnets: 
+$($VPNData.remote.subnets)
 
-		Phase 1: CLC / Customer
-		Mode: $($VPNData.ike.mode)
-		Protocol: $($VPNData.ipsec.protocol)
-		EncAlgo: $($VPNData.ike.encryption)
-		HashAlgo: $($VPNData.ike.hashing)
-		PSK Hint: *** / ***
-		DH Group: $($VPNData.ike.diffieHellmanGroup)
-		Lifetime: $($VPNData.ike.lifetime)
-		DPD: $($VPNData.ike.deadPeerDetection)
-		NAT-T: $($VPNData.ike.natTraversal)
-		Remote ID: $($VPNData.ike.RemoteID)
+Phase 1: CLC / Customer
+Mode: $($VPNData.ike.mode)
+Protocol: $($VPNData.ipsec.protocol)
+EncAlgo: $($VPNData.ike.encryption)
+HashAlgo: $($VPNData.ike.hashing)
+PSK Hint: *** / ***
+DH Group: $($VPNData.ike.diffieHellmanGroup)
+Lifetime: $($VPNData.ike.lifetime)
+DPD: $($VPNData.ike.deadPeerDetection)
+NAT-T: $($VPNData.ike.natTraversal)
+Remote ID: $($VPNData.ike.RemoteID)
 
-		Phase 2: CLC / Customer
-		EncAlgo: $($VPNData.ipsec.encryption)
-		HashAlgo: $($VPNData.ipsec.hashing)
-		PFS - DH Group: $($VPNData.ipsec.pfs)
-		Lifetime: $($VPNData.ipsec.lifetime)
+Phase 2: CLC / Customer
+EncAlgo: $($VPNData.ipsec.encryption)
+HashAlgo: $($VPNData.ipsec.hashing)
+PFS - DH Group: $($VPNData.ipsec.pfs)
+Lifetime: $($VPNData.ipsec.lifetime)
 		"
 	}; #end if TicketOutput
 
@@ -395,7 +348,7 @@ Function Test-ControlVPNStatus {
 		$MessagesLogs
 	} else {
 		"No logged items in Messages log."
-	}
+	}; #end if MessagesLogs
 	
 	"VPN Configuration:"
 	$JuniperVPNData = try {
@@ -410,44 +363,29 @@ Function Test-ControlVPNStatus {
 		"KMD logs:"
 		$KMDdata
 		#>
-	}
+	}; #end Try
 	#No Peer or CLC for Phase 1 only.
 	$JuniperVPNData
 	
 }; #end Get-ControlVPNDetails
 
-<#
-Invoke-JuniperCliCommand -Command 'show log messages | match 206.128.101.148' -Device va2-srx-core
-Test-JuniperS2SVPN -DataCenter WA1 -PeerPublicIp 209.67.114.22 -PeerSubnet 172.16.1.48/32 -ClcSubnet 10.80.156.0/24 #No Peer or CLC for Phase 1 only.
-Get-InfrastructureDevice va2-cfw-1
-
-$RemoteEndpointIP = 204.209.248.249
-$LocalEndpointIP = 206.152.25.101
-$Datacenter = "VA1"
-$tunnelname = Invoke-JuniperCliCommand -command 'show configuration | display set | match $RemoteEndpointIP' -Device "$Datacenter-srx-core"
-Invoke-JuniperCliCommand -command "show configuration | display set | match $(($tunnelname -split ' ')[4])" -Device "$Datacenter-srx-core"
-#Invoke-JuniperCliCommand -Command "show security ike debug-status" -device "$Datacenter-srx-core"
-
-Invoke-JuniperCliCommand -Command "request security ike debug-enable local $LocalEndpointIP remote $RemoteEndpointIP level 11" -device "$Datacenter-srx-core"
-Invoke-JuniperCliCommand -Command "show log kmd | last 25" -device "$Datacenter-srx-core"
-Invoke-JuniperCliCommand -Command "request security ike debug-disable" -device "$Datacenter-srx-core"
-
-#>
 
 Function Get-FiveSecondKMD {
 	Param(
 		[ValidateSet("AU1", "CA1", "CA2", "CA3", "DE1", "GB1", "GB3", "IL1", "NE1", "NY1", "SG1", "UC1", "UT1", "VA1", "VA2", "WA1")]$DataCenter,
 		[ipaddress]$LocalSRXPublicIP,
-		[ipaddress]$RemoteRouterPublicIP
+		[ipaddress]$RemoteRouterPublicIP,
+		[int]$LastLogs = 1000,
+		[int]$Seconds = 5
 	); #end Param
 	
 	$DebugStatus = isrx 'show security ike debug-status' $DataCenter-srx-core 
 	
 	if ( ($DebugStatus -split "-")[-1].trim() ) {
 		isrx "request security ike debug-enable local $($LocalSRXPublicIP) remote $($RemoteRouterPublicIP) level 11" $DataCenter-srx-core 
-		sleep 5
+		sleep $Seconds
 		isrx "request security ike debug-disable" $DataCenter-srx-core 
-		$KMDdata = isrx "show log kmd | match $($RemoteRouterPublicIP) " $DataCenter-srx-core 
+		$KMDdata = isrx "show log kmd | match $($RemoteRouterPublicIP) | last $LastLogs" $DataCenter-srx-core 
 		"KMD logs:"
 		$KMDdata
 	} else {
@@ -523,30 +461,6 @@ Decrypted Bytes have increased by: $EncPacketIncrease
 
 #endregion
 
-<#
-#This is a follow-up to your previous request #1268682 "RE: VM VA1ESRCPR8W3001 and ..."
-#Chop Previous Ticket line from Symptoms
-#Get-ZDSearchFull -search 'type:user email:stephen.gillie@ctl.io'
-#Chop PINs
-#Check if IP from Control is already in list of IPs from ticket.
-#Close-merge
-#$FoundURLs = Regex me up some URL magic stew!
-#if FoundURLs "$HandoverNotes += Blueprint URL: "
-#replace tabs and multiple spaces with " - "
-#If accountalias equals null "$accountalias = (fcs server).AccountAlias"
-#Send-SlackMessage -apikey (fcr slack).entries.value -username stephengillie -channel "james-test" -message "Test!"
-
-
-
-#0. Lookup Username.
-#1. Validate PIN.
-#4. Grab any URLs.
-#- Regex a URL.
-#6. Update ticket with these.
-#comment
-
-
-#>
 
 #region NOC
 
@@ -554,7 +468,7 @@ Function Get-NOCBoxFirstTimeCommands {
 	Param(
 		[switch]$Veeam,
 		[switch]$2012,
-		[array]$Commands = ""
+		[Array]$Commands = ""
 	) #end Param
 	if ($2012) {
 		#--Server 2012---
@@ -587,7 +501,7 @@ Function Get-NOCBoxFirstTimeCommands {
 
 Function Get-NOCBoxFirstTimeCommandExit {
 	Param(
-		[array]$Commands = ""
+		[Array]$Commands = ""
 	) #end Param
 	$Commands += ''
 	$Commands += ''
@@ -607,7 +521,7 @@ Function Get-NOCBoxFirstTimeCommandExit {
 
 Function Get-SendMailTest {
 #---sendmail---
-$MailMessage = '$hostname = hostname ; Send-MailMessage -to sgta@gilgamech.com -from SGTA@gilgamech.com -Subject "Test" -body "Testing from $hostname" -smtps relay.t3mx.com'
+$MailMessage = '$hostname = hostname ; Send-MailMessage -to sgta@ctl.io -from SGTA@ctl.io -Subject "Test" -body "Testing from $hostname" -smtps relay.t3mx.com'
 return $MailMessage
 
 }; #end Get-SendMailTest
@@ -629,40 +543,6 @@ function Connect-NOCBox {
 #endregion
 
 #region utility
-
-#Last customer contact / Update customer before
-function Get-NextContactTime {
-	Param(
-		[Parameter(Mandatory=$True,Position=1)]
-		[Object]$LastContactDateTime# = (convert-time (get-date (Get-ZenDeskTicket 1342769).updated_at) -fromtz utc)
-	); #end Param
-	
-    if ($Global:Toolbox.UsageLog) {
-        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
-    }
-	if ($LastContactDateTime) {
-		$gd = get-date $LastContactDateTime
-		$Response = "Last customer contact: $(get-date $gd -format g) PST `nUpdate customer before: $(get-date $gd.AddHours(8) -format g) PST"
-		return $Response
-		#write-host "Last customer contact:" (get-date $gd -format g) "PST" ; write-host "Update customer before:" (get-date $gd.AddHours(8) -format g) "PST"
-	} else {
-		write-host -f red "Please enter a DateTime Object, surrounded by 'quotes'."
-	}; #end if LastContactDateTime
-#write-host "Last customer contact:" (get-date $LastContactDateTime -format g) "PST" ; write-host "Update customer before:" (get-date $nextcontact -format g) "PST"
-}; #end Get-NextContactTime
-
-#Baremetal Info and status - only VA1 at this time, need to add UC1 and other locations. Stopped working at some point.
-function Get-BareMetalInfoVA1 {
-	Param(
-	   [Switch]$Configurations
-	)
-	$r = convertfrom-json (Invoke-WebRequest "http://tinman-va1.t3n.dom/api/servers/configurations")
-	if ($Configurations){
-		$r.configurations #| select alias, total, available
-	} else {
-		$r.configurations | select alias, total, available #, hardware.processor
-	}; #end if Configurations
-}; #end Get-BareMetalInfoVA1
 
 Function Resolve-DNSName2 {
 	Param(
@@ -762,9 +642,9 @@ Function Get-PasswordCharacterType {
     if ($Global:Toolbox.UsageLog) {
         Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
     }
-	$Output = $Password -creplace "[a-z]", 'lower ' -creplace "[A-Z]", 'upper '-replace "\d", 'number ' -replace '[~`!@#$%^&*(){}\[\]|"<>_+-=\\/?]','symbol ' -replace "[ ]{2,}"," space "
+	$Output = $Password -creplace "[a-z]", ' lower' -creplace "[A-Z]", ' upper'-replace "\d", ' number' -replace '[~`!@#$%^&*(){}\[\]|"<>_+-=\\/?]',' symbol' -replace "[ ]{2,}"," space"
 	
-	$Output = "- Password pattern: $($Output)."
+	$Output = "- Password pattern: $Output."
 	
 	if ($NoClipboard) {
 		return $Output
@@ -808,8 +688,8 @@ Function Convert-ZDTC {
     if (!($Ticketnumber)) {break}
     
     $Newline = "`n"
-	[array]$AliasGAP += $Newline
-	[array]$ServerLine += $Newline
+	[Array]$AliasGAP += $Newline
+	[Array]$ServerLine += $Newline
 	[string]$VeeamServerName = "VeeamServerName"
 	
 	$ZenDeskTicketComments = Get-ZenDeskTicketComment $TicketNumber
@@ -822,26 +702,20 @@ Function Convert-ZDTC {
 		$CommentBody = $Comment.body -split "`n"
 		$UserName = (Get-ZenDeskObject -ObjectId $Comment.author_id -ObjectType User).name
 		
-<#
-		try {
-			[int]$CommentBodyTopLine = ($CommentBody | Select-String 'Hello').LineNumber
-			#[int]$CommentBodyTopLine = ($CommentBody | Select-String 'Hello[A-Z][a-z]+[,]').LineNumber
-		} catch {
-			[int]$CommentBodyTopLine = 0
-		}; #end try
-
-		try {
-			[int]$CommentBodyBottomLine = ($CommentBody | Select-String 'Thanks,').LineNumber
-		} catch {
-			[int]$CommentBodyBottomLine = 0
-		}; #end try
-
-		if ($CommentBodyBottomLine -le 0) {
-			[int]$CommentBodyBottomLine = $CommentBody.length
-		}; # end if CommentBodyBottomLine
-#>
 		if ($CommentBody[0] -like "Customer Account Alias*") {
 			$output += "$($counterstring). $UserName made a Handover Notes $PublicComment update." + $Newline
+		} elseif ($CommentBody[0] -like "QI: *") {
+			$output += "$($counterstring). $UserName issued a QI." + $Newline
+		} elseif ($CommentBody[0] -like "Passing to relevant engineer for appropriate follow up.*") {
+			$output += "$($counterstring). Automated post-chat ticket hygiene." + $Newline
+		} elseif ($CommentBody[0] -like "Assigning to engineer *") {
+			$output += "$($counterstring). Automated post-chat ticket hygiene." + $Newline
+		} elseif ($CommentBody[0] -like "Adding chat time:*") {
+			$output += "$($counterstring). Automated post-chat ticket hygiene." + $Newline
+		} elseif ($CommentBody[0] -like "| General Info | | Chat Start Time:*") {
+			$output += "$($counterstring). Chat Transcript attached." + $Newline
+		} elseif ($UserName -like "Chat Transcript") {
+			$output += "$($counterstring). Chat Transcript attached." + $Newline
 		} else {
 			$output += "$($counterstring). $UserName made the following $PublicComment update:" + $Newline
 			$output += "- " + (ConvertFrom-ParagraphtoBulletList -NoClipboard $CommentBody) + $Newline
@@ -849,9 +723,14 @@ Function Convert-ZDTC {
 		}; # end if PublicComment
 		
 	}; # end foreach Comment
-	$output = $output -replace "Thanks,""" -replace "","" | select -unique
+	$output = $output -replace "Thanks,","" -replace "Hello,","" -replace "CenturyLink Cloud\r\n",""  | select -unique
 	$output
 }; #end Convert-ZDTC
+
+Function Get-Invocation {
+	$MyInvocation
+}; #end Get-Invocation
+
 #endregion
 
 #region VMWare
@@ -887,75 +766,24 @@ function Get-VMMigrationEvent {
 }; #end Get-VMMigrationEvent
 
 
-Function Connect-AllVcentersinDC {
-<#
-	.SYNOPSIS
-	Used to connect to all Vcenter Servers in the local data center
-
-	.DESCRIPTION
-	Used to connect to all Vcenter Servers in the local data center
-
-	.LINK
-	Get-VcentersWithDC
-
-	.EXAMPLE 
-	Connect-AllVcentersinDC
-
-	.PARAMETER dc
-	#>
-[CmdLetBinding()]
-	param
-	(
-	[string]$dc
-	)
-	begin
-	{
-		if ((Test-SnapinLoaded -snapin vmware.vimautomation.core) -eq $false)
-		{
-		write-error "Can not load vmware.vimautomation.core snapin into memory, halting execution of this command" -Category InvalidData
-		return
-		}
-	}
-
-	process
-	{
-	$i = 1
-	$vcenters = Get-VcentersWithDC -localdc | foreach {$_.vcenter}
-		foreach ($vcenter in $vcenters)
-		{
-		Write-Verbose ("Attempting to connect to "+ $vcenter +" "+ $i +"/"+ ($vcenters.count))
-		$i++
-		Connect-VIServer $vcenter | Out-Null
-		}
-	Write-Verbose "Connecting to vcenters complete"
-	}
-}; #end Connect-AllVcentersinDC
-
 function Convert-CPUReady { 
- <#
- .SYNOPSIS
+<#
+.SYNOPSIS
 	 Converts between CPU summation and CPU % ready values
- .DESCRIPTION
+.DESCRIPTION
 	 Author   : Stephen Gillie (found online)
 	 Last edit: 5/7/2016
- .PARAMETER Frequency
+.PARAMETER Frequency
 	 Required.
 	 VMWare Performance Graph from which the CPU Ready value was taken.
- .PARAMETER CPUReadyValue
+.PARAMETER CPUReadyValue
 	 Required.
 	 CPU Ready value from the VMWare Performance Graph. 
- .EXAMPLE
+.EXAMPLE
 	 Math-CPUReady -Frequency PastMonth -CPUReadyValue 244332
- .INPUTS
-	 [string]
-	 [int]
-	 [switch]
- .OUTPUTS
-	 [string]
- 	[int]
  .LINK
 	 https://kb.vmware.com/selfservice/microsites/search.do?language=en_US&cmd=displayKC&externalId=2002181
- #>
+#>
   	Param(
  		[Parameter(Mandatory=$True,Position=1)]
  		[ValidateSet("Realtime","PastDay","PastWeek","PastMonth","PastYear")]
@@ -995,8 +823,122 @@ function Convert-CPUReady {
 
 #endregion
  
- 
+ Function Get-CachedUserFromID { 
 <#
+	.SYNOPSIS
+	Builds the CacheTable if necessary, then returns it. Acts as a caching callback wrapper.
+	.DESCRIPTION
+	Author   : Stephen Gillie
+	Last edit: 05/06/2017
+	.EXAMPLE
+	Get-CachedUserFromID Get-SlackUser U095H3F1B
+#>
+
+  [CmdletBinding()]
+    Param( 
+		[Parameter(Mandatory=$True,Position=0)][string]$FunctiontoCache,
+		[Parameter(Mandatory=$True,ValueFromPipeline=$True,Position=1)][Array]$InputCacheData,
+        [String]$CachePath = ([environment]::getfolderpath("mydocuments")),
+        [String]$CacheFilename = ($CachePath + "\" + $FunctiontoCache + ".json"),
+		[Array]$CacheTable = (Get-Content -raw $CacheFilename -ErrorAction SilentlyContinue | ConvertFrom-Json),
+        [String]$FieldToReturn = "name",
+        [String]$FieldToKey = "id",
+        [String]$AltFieldToReturn = "real_name",
+        [String]$SideIndicator = "=>",
+		[Array]$OutCheck = $InputCacheData
+    ); #end Param
+	
+
+	Write-Verbose "File $CacheFilename"
+	Write-Verbose "Starting InputVar $InputCacheData"
+	
+	Write-Verbose "Pre-diff InputVar $InputCacheData"
+    if ($InputCacheData -AND $CacheTable) {
+		[Array]$InputCacheData = try{
+			(Compare-Object ($CacheTable.$FieldToKey | sort -Unique) ($InputCacheData | sort -Unique) | where {$_.SideIndicator -match $SideIndicator}).inputobject
+		}catch{
+			$InputCacheData
+		}; #end try
+    }; #end If InputCacheData
+	$InputCacheData = ($InputCacheData | sort -Unique)
+	Write-Verbose "Diffed InputVar $InputCacheData"
+    
+    #Lookup any new UserIDs, add them to the table.
+    foreach ($DataItem in $InputCacheData) { 
+		Write-Verbose "$FunctionToCache $DataItem"
+        [Array]$CacheTable += (& $FunctiontoCache $DataItem)
+    }; #end foreach DataItem
+    
+    #Write the table, then immediately read from it, to return.
+	Write-Verbose "CachedData $($CacheTable.$FieldToKey)"
+    $CacheTable | ConvertTo-Json > $CacheFilename
+	Write-Verbose "Ending InputVar $InputCacheData"
+	$OutputCacheData = (Get-Content -raw $CacheFilename -ErrorAction SilentlyContinue | ConvertFrom-Json )
+	#This only seems to work if the property is called on the where output, maybe to convert this into another object type?
+	Write-Verbose "First OutputVar $OutputCacheData"
+	
+	if (($OutputCacheData | where {$_.$FieldToKey -in $OutCheck}).$AltFieldToReturn) {
+		$OutputCacheData = ($OutputCacheData | where {$_.$FieldToKey -in $OutCheck}).$AltFieldToReturn
+	} else {
+		$OutputCacheData = ($OutputCacheData | where {$_.$FieldToKey -in $OutCheck}).$FieldToReturn
+	}; #end if $OutputCacheData
+	Write-Verbose "Last OutputVar $OutputCacheData"
+	return $OutputCacheData
+ }; #end Get-CachedUserFromID
+
+
+#region Slack
+#Send-SlackMessage -apikey (fcr slack).entries.value -username stephengillie -channel "james-test" -message "Test!"
+
+Function Get-SlackChannelMessagesAsText {
+<#
+.SYNOPSIS
+
+.DESCRIPTION
+Get-SlackChannelMessagesAsText
+.EXAMPLE
+Get-SlackChannelMessagesAsText
+#>
+[CmdletBinding()]
+    param
+    (
+		[string]$ChannelName,
+		[string]$ChannelID,
+		[int]$Count="10",
+		[string]$APIKey = ((fcr slack).entries.value[1])
+    )
+	$origin = get-date "1/1/1970"
+    if ($env:ToolboxUsageLog) {
+        Write-UsageLog -Invocation $MyInvocation -Verbose:$VerbosePreference
+    }
+    if (!($ChannelID)) {
+		$ChannelID = Invoke-SlackApi -Method channels.list -Token $APIKey | select -expand channels | where {$_.name -eq $channelname} | foreach {$_.ID}
+    }; #end if ChannelID
+    #$ChannelID = Get-SlackChannels -apikey $APIKey | where {$_.name -eq $channelname} | foreach {$_.ID}
+	Write-Verbose $ChannelID
+
+    $slackurl = "https://slack.com/api/channels.history?token=$APIKey&channel=$channelid&count=$count&pretty=1"
+    $updates = Invoke-WebRequest -Uri $slackurl -UseBasicParsing
+    $updates = $updates.Content | ConvertFrom-Json
+
+    [Array]$output = @{}
+
+    foreach ($update in ($updates.messages | where {$_.user -ne $null})) {
+		#$time = Convert-FromUnixdate -UnixDate ($update.ts)
+		#$timestring = get-date ($time ) -UFormat %R
+		$timestring = 	$origin.AddSeconds($update.ts)
+		$UserName = if ($update.user) {Get-CachedUserFromID Get-SlackUser $update.user} else {"NoUserID"}
+		#$line = $timestring + " - " + (Get-SlackUser -apikey $APIKey -user $update.user | foreach {$_.real_name}) + " - " + $update.text
+		$line = $timestring + " - " + $UserName + " - " +  $update.text
+		$output += $line
+    }
+    [Array]::Reverse($output)
+    return $output
+}; #end Get-SlackChannelMessagesAsText
+
+
+#endregion
+
 #>
 #region ElasticSearch
 $baseUrl = 'http://10.170.15.15:9200/devices/device/_search'
